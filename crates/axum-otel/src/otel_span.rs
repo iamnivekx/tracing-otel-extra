@@ -91,8 +91,8 @@ impl<B> MakeSpan<B> for AxumOtelSpanCreator {
             request_id = Empty,
             trace_id = Empty,
         );
-        set_request_id(&request.headers(), &span);
-        set_otel_parent(&request.headers(), &span);
+        set_request_id(request.headers(), &span);
+        set_otel_parent(request.headers(), &span);
         span
     }
 }

@@ -37,6 +37,10 @@ use opentelemetry_otlp::WithExportConfig;
 use std::net::SocketAddr;
 use tower_http::trace::TraceLayer;
 
+fn handler() -> &'static str {
+    "Hello, world!"
+}
+
 #[tokio::main]
 async fn main() {
     // Initialize OpenTelemetry

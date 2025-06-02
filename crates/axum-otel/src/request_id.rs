@@ -1,7 +1,7 @@
 use axum::http::HeaderMap;
 use tracing::Span;
 
-/// Set the request id for the current span. `x-request-id` or `request_id` header is supported.
+/// Set the request id for the current span. `x-request-id` or `request-id` header is supported.
 pub(crate) fn set_request_id(headers: &HeaderMap, span: &Span) {
     let request_id = headers
         .get("x-request-id")

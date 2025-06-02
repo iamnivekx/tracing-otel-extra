@@ -33,7 +33,12 @@
 //! use axum_otel::{AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator};
 //! use tower_http::trace::TraceLayer;
 //!
-//! let app = Router::new()
+//! async fn handler() -> &'static str {
+//!     "Hello, world!"
+//! }
+//!
+//! // Build our application with a route
+//! let app: Router<()> = Router::new()
 //!     .route("/", get(handler))
 //!     .layer(
 //!         TraceLayer::new_for_http()

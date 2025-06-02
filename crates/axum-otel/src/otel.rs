@@ -13,10 +13,11 @@ pub(crate) fn set_otel_parent(headers: &HeaderMap, span: &tracing::Span) {
     // If not, it will be the newly generated trace identifier with this request as root span.
     let remote_span = remote_context.span();
     let remote_span_context = remote_span.span_context();
-    let trace_id = remote_span_context
-        .is_valid()
-        .then(|| remote_span_context.trace_id().to_string())
-        .unwrap_or_else(|| span.context().span().span_context().trace_id().to_string());
+    let trace_id = if remote_span_context.is_valid() {
+        remote_span_context.trace_id().to_string()
+    } else {
+        span.context().span().span_context().trace_id().to_string()
+    };
     span.set_parent(remote_context);
     span.record("trace_id", tracing::field::display(trace_id));
 }
