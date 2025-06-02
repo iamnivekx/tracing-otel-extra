@@ -1,0 +1,22 @@
+[package]
+name = "axum-otel"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tracing = { workspace = true }
+opentelemetry = { workspace = true }
+opentelemetry-http = { workspace = true }
+opentelemetry-otlp = { workspace = true }
+opentelemetry_sdk = { workspace = true }
+opentelemetry-semantic-conventions = { workspace = true }
+tracing-opentelemetry = { workspace = true }
+axum = { workspace = true }
+pin-project-lite = { workspace = true }
+uuid = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+
+[dev-dependencies]
+axum = { version = "0.8", default-features = false, features = ["macros"] }
+tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }

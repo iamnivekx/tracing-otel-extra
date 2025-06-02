@@ -1,0 +1,42 @@
+[workspace]
+members = ["crates/axum-otel", "examples/otel"]
+resolver = "2"
+
+[workspace.package]
+rust-version = "1.82"
+version = "0.29.0"
+authors = ["nivek <h49987180@gmail.com>"]
+edition = "2021"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/iamnivekx/axum-otel"
+documentation = "https://docs.rs/axum-otel/"
+readme = "README.md"
+
+description = "Structured logging middleware for axum."
+
+keywords = ["http", "axum", "tracing", "logging"]
+categories = ["asynchronous", "web-programming"]
+
+[workspace.dependencies]
+axum = { version = "0.8", features = ["macros"] }
+pin-project = "1.0.0"
+tracing = "0.1.36"
+uuid = { version = "1.17", features = ["v7"] }
+tower = "0.5.2"
+tower-http = { version = "0.6.5", features = [
+    "trace",
+    "request-id",
+    "set-header",
+] }
+opentelemetry = { version = "0.29.0", features = ["metrics"] }
+opentelemetry_sdk = { version = "0.29.0", features = ["rt-tokio"] }
+opentelemetry-http = "0.29.0"
+opentelemetry-otlp = { version = "0.29.0", features = [
+    "metrics",
+    "grpc-tonic",
+] }
+opentelemetry-semantic-conventions = { version = "0.29.0", features = [
+    "semconv_experimental",
+] }
+pin-project-lite = "0.2"
+tracing-opentelemetry = "0.30.0"
