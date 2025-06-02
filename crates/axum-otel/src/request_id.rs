@@ -1,6 +1,7 @@
 use axum::http::HeaderMap;
 use tracing::Span;
 
+/// Set the request id for the current span. `x-request-id` or `request_id` header is supported.
 pub(crate) fn set_request_id(headers: &HeaderMap, span: &Span) {
     let request_id = headers
         .get("x-request-id")
@@ -8,9 +9,9 @@ pub(crate) fn set_request_id(headers: &HeaderMap, span: &Span) {
         // If `x-request-id` isn't set, check `request_id`.
         .or_else(|| {
             headers
-                .get("request_id")
+                .get("request-id")
                 .and_then(|v| v.to_str().map(ToOwned::to_owned).ok())
         })
-        .unwrap_or_else(|| "".to_string());
+        .unwrap_or_default();
     span.record("request_id", tracing::field::display(request_id));
 }

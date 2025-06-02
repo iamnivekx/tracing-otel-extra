@@ -1,5 +1,6 @@
 use axum::http::HeaderMap;
 
+/// Set the parent span for the current span and record the trace id.
 pub(crate) fn set_otel_parent(headers: &HeaderMap, span: &tracing::Span) {
     use opentelemetry::trace::TraceContextExt as _;
     use tracing_opentelemetry::OpenTelemetrySpanExt as _;

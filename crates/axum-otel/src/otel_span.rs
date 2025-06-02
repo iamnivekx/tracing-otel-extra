@@ -1,5 +1,14 @@
-//! Module defining utilities for crating `tracing` spans compatible with OpenTelemetry's
+//! Module defining utilities for creating `tracing` spans compatible with OpenTelemetry's
 //! conventions.
+//!
+//! This module provides three main components:
+//!
+//! 1. `AxumOtelSpanCreator`: Creates spans for each request with relevant HTTP information
+//! 2. `AxumOtelOnResponse`: Records response status and latency
+//! 3. `AxumOtelOnFailure`: Handles error cases and updates span status
+//!
+//! These components work together to provide comprehensive request tracing in Axum applications.
+
 use crate::{otel::set_otel_parent, request_id::set_request_id};
 use axum::{
     extract::{ConnectInfo, MatchedPath},
@@ -11,10 +20,30 @@ use tower_http::{
     classify::ServerErrorsFailureClass,
     trace::{MakeSpan, OnFailure, OnResponse},
 };
-use tracing::field::{Empty, debug};
+use tracing::field::{debug, Empty};
 
 /// An implementor of [`MakeSpan`] which creates `tracing` spans populated with information about
 /// the request received by an `axum` web server.
+///
+/// This span creator automatically adds the following attributes to each span:
+///
+/// - `http.method`: The HTTP method
+/// - `http.route`: The matched route
+/// - `http.client_ip`: The client's IP address
+/// - `http.host`: The Host header
+/// - `http.user_agent`: The User-Agent header
+/// - `request_id`: A unique request identifier
+/// - `trace_id`: The OpenTelemetry trace ID
+///
+/// # Example
+///
+/// ```rust
+/// use axum_otel::AxumOtelSpanCreator;
+/// use tower_http::trace::TraceLayer;
+///
+/// let layer = TraceLayer::new_for_http()
+///     .make_span_with(AxumOtelSpanCreator);
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct AxumOtelSpanCreator;
 
@@ -69,6 +98,21 @@ impl<B> MakeSpan<B> for AxumOtelSpanCreator {
 }
 
 /// An implementor of [`OnResponse`] which records the response status code and latency.
+///
+/// This component adds the following attributes to the span:
+///
+/// - `http.status_code`: The response status code
+/// - `otel.status_code`: The OpenTelemetry status code (OK for successful responses)
+///
+/// # Example
+///
+/// ```rust
+/// use axum_otel::AxumOtelOnResponse;
+/// use tower_http::trace::TraceLayer;
+///
+/// let layer = TraceLayer::new_for_http()
+///     .on_response(AxumOtelOnResponse);
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct AxumOtelOnResponse;
 
@@ -92,6 +136,18 @@ impl<B> OnResponse<B> for AxumOtelOnResponse {
 }
 
 /// An implementor of [`OnFailure`] which records the failure status code.
+///
+/// This component updates the span's `otel.status_code` to "ERROR" when a server error occurs.
+///
+/// # Example
+///
+/// ```rust
+/// use axum_otel::AxumOtelOnFailure;
+/// use tower_http::trace::TraceLayer;
+///
+/// let layer = TraceLayer::new_for_http()
+///     .on_failure(AxumOtelOnFailure);
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct AxumOtelOnFailure;
 
