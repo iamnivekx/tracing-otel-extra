@@ -85,8 +85,8 @@
 //!
 //! See the [examples](./examples) directory for complete examples.
 
-mod otel;
 mod otel_span;
+mod otel_trace;
 mod request_id;
 
 // Exports for the tower-http::trace::TraceLayer based middleware

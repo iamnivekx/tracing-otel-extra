@@ -9,7 +9,7 @@
 //!
 //! These components work together to provide comprehensive request tracing in Axum applications.
 
-use crate::{otel::set_otel_parent, request_id::set_request_id};
+use crate::{otel_trace::set_otel_parent, request_id::set_request_id};
 use axum::{
     extract::{ConnectInfo, MatchedPath},
     http,

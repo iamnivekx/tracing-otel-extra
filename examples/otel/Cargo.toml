@@ -1,6 +1,6 @@
 [package]
 name = "axum-otel-demo"
-version = "0.29.0"
+version = "0.29.1"
 authors = ["nivek <h49987180@gmail.com>"]
 edition = "2021"
 
