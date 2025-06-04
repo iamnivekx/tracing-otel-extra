@@ -33,11 +33,12 @@ use axum::{
 };
 use axum_otel::{AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator};
 use opentelemetry::sdk::trace::Config;
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{WithExportConfig, Protocol};
 use std::net::SocketAddr;
 use tower_http::trace::TraceLayer;
+use tracing::Level;
 
-fn handler() -> &'static str {
+async fn handler() -> &'static str {
     "Hello, world!"
 }
 
@@ -73,10 +74,6 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
-}
-
-async fn handler() -> &'static str {
-    "Hello, World!"
 }
 ```
 
