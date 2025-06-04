@@ -6,23 +6,23 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-axum = { version = "0.8", features = ["macros"] }
+axum = { workspace = true }
 axum-otel = { path = "../../../crates/axum-otel" }
-anyhow = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tower = "0.5"
-tower-http = "0.6"
-opentelemetry = { workspace = true }
-opentelemetry-otlp = { workspace = true, features = ["grpc-tonic"] }
-opentelemetry_sdk = { workspace = true, features = ["rt-tokio-current-thread"] }
-opentelemetry-semantic-conventions = { workspace = true }
-tokio = { version = "1.39", features = ["full"] }
-tracing = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true, features = ["request-id"] }
+tracing-subscriber = { workspace = true }
 tracing-opentelemetry = { workspace = true }
-tracing-subscriber = { workspace = true, features = ["registry", "env-filter"] }
-reqwest = { version = "0.12", features = ["json"] }
-reqwest-middleware = "0.4.2"
-reqwest-retry = "0.7"
-reqwest-tracing = { version = "0.5", features = ["opentelemetry_0_29"] }
-url = "2.5"
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+opentelemetry = { workspace = true }
+opentelemetry-otlp = { workspace = true }
+opentelemetry_sdk = { workspace = true }
+opentelemetry-semantic-conventions = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+
+reqwest = { workspace = true }
+reqwest-middleware = { workspace = true }
+reqwest-retry = { workspace = true }
+reqwest-tracing = { workspace = true }

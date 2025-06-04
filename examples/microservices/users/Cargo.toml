@@ -9,7 +9,7 @@ license.workspace = true
 axum = { workspace = true }
 axum-otel = { path = "../../../crates/axum-otel" }
 tower = { workspace = true }
-tower-http = { workspace = true }
+tower-http = { workspace = true, features = ["request-id"] }
 tracing-subscriber = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 anyhow = { workspace = true }
