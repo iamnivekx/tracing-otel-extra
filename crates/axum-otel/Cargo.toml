@@ -10,14 +10,15 @@ readme = "README.md"
 authors = ["nivek <h49987180@gmail.com>"]
 
 [dependencies]
-tracing = { workspace = true }
-tracing-opentelemetry = { workspace = true }
+axum = { workspace = true }
 opentelemetry = { workspace = true }
 opentelemetry-http = { workspace = true }
-opentelemetry-otlp = { workspace = true }
-axum = { workspace = true }
 tower-http = { workspace = true }
+tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true }
 
 [dev-dependencies]
+tokio = { workspace = true }
+opentelemetry_sdk = { workspace = true }
 tracing-subscriber = { workspace = true }
-tower = { workspace = true }
+opentelemetry-otlp = { workspace = true }

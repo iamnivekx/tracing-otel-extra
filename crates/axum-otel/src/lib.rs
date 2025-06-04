@@ -102,6 +102,7 @@ mod request_id;
 
 // crate private exports
 pub(crate) use otel::set_otel_parent;
+pub(crate) use request_id::get_request_id;
 
 // Exports for the tower-http::trace::TraceLayer based middleware
 pub use make_span::AxumOtelSpanCreator;

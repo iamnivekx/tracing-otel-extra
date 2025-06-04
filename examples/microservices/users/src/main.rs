@@ -11,14 +11,12 @@ use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{propagation::TraceContextPropagator, Resource};
 use opentelemetry_semantic_conventions::resource;
 use serde::{Deserialize, Serialize};
-use std::process;
 use std::sync::{Arc, LazyLock};
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
-use url::Url;
 
 static RESOURCE: LazyLock<Resource> = LazyLock::new(|| {
     Resource::builder()
@@ -80,14 +78,6 @@ async fn create_user(State(state): State<AppState>, Json(payload): Json<CreateUs
 }
 
 fn init_telemetry() -> opentelemetry_sdk::trace::SdkTracerProvider {
-    let (loki_layer, loki_task) = tracing_loki::builder()
-        .extra_field("service_name", env!("CARGO_PKG_NAME"))
-        .expect("Failed to add service name field")
-        .extra_field("pid", format!("{}", process::id()))
-        .expect("Failed to add pid field")
-        .build_url(Url::parse("http://127.0.0.1:3100").expect("Failed to parse URL"))
-        .expect("Failed to build Loki layer");
-
     global::set_text_map_propagator(TraceContextPropagator::new());
     let otlp_exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_tonic()
@@ -116,13 +106,11 @@ fn init_telemetry() -> opentelemetry_sdk::trace::SdkTracerProvider {
     let subscriber = Registry::default()
         .with(env_filter)
         .with(telemetry)
-        .with(formatting_layer)
-        .with(loki_layer);
+        .with(formatting_layer);
 
     tracing::subscriber::set_global_default(subscriber)
         .expect("Failed to install `tracing` subscriber.");
 
-    tokio::spawn(loki_task);
     provider
 }
 

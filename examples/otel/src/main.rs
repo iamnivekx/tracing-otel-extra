@@ -13,7 +13,7 @@ use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
-use tracing::debug;
+use tracing::{debug, info};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry}; // For Axum server
 
@@ -115,6 +115,7 @@ async fn main() -> Result<()> {
         .route("/health", get(health)); // without request id, the span will not be created
 
     let listener = TcpListener::bind("127.0.0.1:8080").await?;
+    info!("Server is running on http://127.0.0.1:8080");
     axum::serve(listener, app.into_make_service()).await?;
 
     // Ensure all spans have been shipped.

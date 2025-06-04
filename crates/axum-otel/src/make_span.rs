@@ -1,4 +1,4 @@
-use crate::{request_id::set_request_id, set_otel_parent};
+use crate::{get_request_id, set_otel_parent};
 use axum::{
     extract::{ConnectInfo, MatchedPath},
     http,
@@ -109,7 +109,7 @@ impl<B> MakeSpan<B> for AxumOtelSpanCreator {
                     otel.name = span_name,
                     otel.kind = ?SpanKind::Server,
                     otel.status_code = Empty,
-                    request_id = Empty,
+                    request_id = ?get_request_id(request.headers()),
                     trace_id = Empty,
                 )
             }
@@ -123,7 +123,6 @@ impl<B> MakeSpan<B> for AxumOtelSpanCreator {
             Level::TRACE => make_span!(Level::TRACE),
         };
         set_otel_parent(request.headers(), &span);
-        set_request_id(request.headers(), &span);
         span
     }
 }
