@@ -4,7 +4,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use axum_otel::{AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator};
+use axum_otel::{AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator, Level};
 use opentelemetry::trace::TracerProvider;
 use opentelemetry::{global, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
@@ -184,9 +184,9 @@ async fn main() -> Result<()> {
                 .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
                 .layer(
                     TraceLayer::new_for_http()
-                        .make_span_with(AxumOtelSpanCreator)
-                        .on_response(AxumOtelOnResponse)
-                        .on_failure(AxumOtelOnFailure),
+                        .make_span_with(AxumOtelSpanCreator::new().level(Level::INFO))
+                        .on_response(AxumOtelOnResponse::new().level(Level::INFO))
+                        .on_failure(AxumOtelOnFailure::new()),
                 )
                 .layer(PropagateRequestIdLayer::x_request_id()),
         )

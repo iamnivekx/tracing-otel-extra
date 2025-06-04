@@ -9,6 +9,8 @@
     unused_qualifications
 )]
 #![doc(html_root_url = "https://docs.rs/axum-otel/0.29.0")]
+#![macro_use]
+#![allow(unused_imports)]
 
 //! # axum-otel: OpenTelemetry Tracing for Axum Web Framework
 //!
@@ -42,9 +44,9 @@
 //!     .route("/", get(handler))
 //!     .layer(
 //!         TraceLayer::new_for_http()
-//!             .make_span_with(AxumOtelSpanCreator)
-//!             .on_response(AxumOtelOnResponse)
-//!             .on_failure(AxumOtelOnFailure),
+//!             .make_span_with(AxumOtelSpanCreator::new().level(Level::INFO))
+//!             .on_response(AxumOtelOnResponse::new().level(Level::INFO))
+//!             .on_failure(AxumOtelOnFailure::new()),
 //!     );
 //! ```
 //!
@@ -54,6 +56,8 @@
 //!
 //! Creates spans for each request with relevant HTTP information. This is used with
 //! `TraceLayer::make_span_with`.
+//!
+//! Original implementation from [tower-http](https://github.com/tower-rs/tower-http/blob/635692d757f29dfa3041c02cd66c195be07bc8b3/tower-http/src/trace/mod.rs#L414).
 //!
 //! The span will include the following attributes:
 //!
@@ -70,6 +74,8 @@
 //!
 //! Records response status and latency. This is used with `TraceLayer::on_response`.
 //!
+//! Original implementation from [tower-http](https://github.com/tower-rs/tower-http/blob/635692d757f29dfa3041c02cd66c195be07bc8b3/tower-http/src/trace/mod.rs#L414).
+//!
 //! The following attributes are added to the span:
 //!
 //! - `http.status_code`: The response status code
@@ -79,18 +85,28 @@
 //!
 //! Handles error cases and updates span status. This is used with `TraceLayer::on_failure`.
 //!
+//! Original implementation from [tower-http](https://github.com/tower-rs/tower-http/blob/635692d757f29dfa3041c02cd66c195be07bc8b3/tower-http/src/trace/mod.rs#L414).
+//!
 //! When a server error occurs, the span's `otel.status_code` is set to "ERROR".
 //!
 //! ## Examples
 //!
 //! See the [examples](./examples) directory for complete examples.
 
-mod otel_span;
-mod otel_trace;
+mod event_macro;
+mod make_span;
+mod on_failure;
+mod on_response;
+mod otel;
 mod request_id;
 
+// crate private exports
+pub(crate) use otel::set_otel_parent;
+
 // Exports for the tower-http::trace::TraceLayer based middleware
-pub use otel_span::AxumOtelOnFailure;
-pub use otel_span::AxumOtelOnResponse;
-pub use otel_span::AxumOtelSpanCreator;
+pub use make_span::AxumOtelSpanCreator;
+pub use on_failure::AxumOtelOnFailure;
+pub use on_response::AxumOtelOnResponse;
+
+// Re-export the Level enum from tracing crate
 pub use tracing::Level;

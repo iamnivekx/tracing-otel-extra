@@ -46,9 +46,12 @@ async fn main() {
     // Initialize OpenTelemetry
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
-        .with_exporter(opentelemetry_otlp::new_exporter()
-            .tonic()
-            .with_endpoint("http://localhost:4317"))
+        .with_exporter(
+            opentelemetry_otlp::new_exporter()
+                .tonic()
+                .with_endpoint("http://localhost:4317")
+                .with_protocol(Protocol::Grpc)
+        )
         .with_trace_config(Config::default())
         .install_batch(opentelemetry::runtime::Tokio)
         .expect("Failed to initialize OpenTelemetry");
@@ -58,9 +61,9 @@ async fn main() {
         .route("/", get(handler))
         .layer(
             TraceLayer::new_for_http()
-                .make_span_with(AxumOtelSpanCreator)
-                .on_response(AxumOtelOnResponse)
-                .on_failure(AxumOtelOnFailure),
+                .make_span_with(AxumOtelSpanCreator::new().level(Level::INFO))
+                .on_response(AxumOtelOnResponse::new().level(Level::INFO))
+                .on_failure(AxumOtelOnFailure::new()),
         );
 
     // Run it

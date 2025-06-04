@@ -1,7 +1,7 @@
 use anyhow::Result;
 use axum::extract::Query;
 use axum::{routing::get, Router};
-use axum_otel::{AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator};
+use axum_otel::{AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator, Level};
 use opentelemetry::trace::TracerProvider;
 use opentelemetry::{global, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
@@ -14,6 +14,7 @@ use tower::ServiceBuilder;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
 use tracing::debug;
+use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry}; // For Axum server
 
 static RESOURCE: LazyLock<Resource> = LazyLock::new(|| {
@@ -35,7 +36,7 @@ pub struct HelloQuery {
 
 #[tracing::instrument]
 async fn hello(q: Query<HelloQuery>) -> &'static str {
-    debug!("Hello request query: {:?}", q);
+    debug!("hello request query: {:?}", q);
     "Hello world!"
 }
 
@@ -65,7 +66,7 @@ fn init_telemetry() -> opentelemetry_sdk::trace::SdkTracerProvider {
         // axum logs rejections from built-in extractors with the `axum::rejection`
         // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
         format!(
-            "{}=trace,tower_http=debug,axum::rejection=trace,axum_otel=trace",
+            "{}=trace,axum::rejection=trace,axum_otel=trace",
             env!("CARGO_CRATE_NAME")
         )
         .into()
@@ -77,7 +78,9 @@ fn init_telemetry() -> opentelemetry_sdk::trace::SdkTracerProvider {
         .compact()
         .with_writer(std::io::stdout)
         .with_ansi(true)
-        .with_level(true);
+        .with_level(true)
+        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE);
+
     // Combined them all together in a `tracing` subscriber
     let subscriber = Registry::default()
         .with(env_filter)
@@ -103,9 +106,9 @@ async fn main() -> Result<()> {
                 .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
                 .layer(
                     TraceLayer::new_for_http()
-                        .make_span_with(AxumOtelSpanCreator)
-                        .on_response(AxumOtelOnResponse)
-                        .on_failure(AxumOtelOnFailure),
+                        .make_span_with(AxumOtelSpanCreator::new().level(Level::INFO))
+                        .on_response(AxumOtelOnResponse::new().level(Level::INFO))
+                        .on_failure(AxumOtelOnFailure::new().level(Level::ERROR)),
                 )
                 .layer(PropagateRequestIdLayer::x_request_id()),
         )
