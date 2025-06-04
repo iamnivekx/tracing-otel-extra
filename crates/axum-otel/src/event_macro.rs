@@ -12,48 +12,49 @@
 /// ```
 #[macro_export]
 macro_rules! event_dynamic_lvl {
-    ( $(target: $target:expr,)? $(parent: $parent:expr,)? $lvl:expr, $($tt:tt)* ) => {
+    ($lvl:expr, $($tt:tt)*) => {
         match $lvl {
             tracing::Level::ERROR => {
-                tracing::event!(
-                    $(target: $target,)?
-                    $(parent: $parent,)?
-                    tracing::Level::ERROR,
-                    $($tt)*
-                );
+                tracing::event!(tracing::Level::ERROR, $($tt)*);
             }
             tracing::Level::WARN => {
-                tracing::event!(
-                    $(target: $target,)?
-                    $(parent: $parent,)?
-                    tracing::Level::WARN,
-                    $($tt)*
-                );
+                tracing::event!(tracing::Level::WARN, $($tt)*);
             }
             tracing::Level::INFO => {
-                tracing::event!(
-                    $(target: $target,)?
-                    $(parent: $parent,)?
-                    tracing::Level::INFO,
-                    $($tt)*
-                );
+                tracing::event!(tracing::Level::INFO, $($tt)*);
             }
             tracing::Level::DEBUG => {
-                tracing::event!(
-                    $(target: $target,)?
-                    $(parent: $parent,)?
-                    tracing::Level::DEBUG,
-                    $($tt)*
-                );
+                tracing::event!(tracing::Level::DEBUG, $($tt)*);
             }
             tracing::Level::TRACE => {
-                tracing::event!(
-                    $(target: $target,)?
-                    $(parent: $parent,)?
-                    tracing::Level::TRACE,
-                    $($tt)*
-                );
+                tracing::event!(tracing::Level::TRACE, $($tt)*);
             }
         }
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Level;
+
+    #[test]
+    fn test_basic_usage() {
+        // Test all log levels
+        event_dynamic_lvl!(Level::ERROR, "error message");
+        event_dynamic_lvl!(Level::WARN, "warning message");
+        event_dynamic_lvl!(Level::INFO, "info message");
+        event_dynamic_lvl!(Level::DEBUG, "debug message");
+        event_dynamic_lvl!(Level::TRACE, "trace message");
+    }
+
+    #[test]
+    fn test_with_fields() {
+        event_dynamic_lvl!(
+            Level::INFO,
+            field1 = "value1",
+            field2 = 42,
+            "message with fields"
+        );
+    }
 }
