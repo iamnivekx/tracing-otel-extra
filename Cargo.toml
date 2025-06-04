@@ -16,19 +16,22 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/iamnivekx/axum-otel"
 documentation = "https://docs.rs/axum-otel/"
 readme = "README.md"
-
 description = "Structured logging middleware for axum."
 
 keywords = ["http", "axum", "tracing", "logging"]
 categories = ["asynchronous", "web-programming"]
 
 [workspace.dependencies]
+tracing = "0.1"
 axum = { version = "0.8", features = ["macros"] }
-pin-project = "1.0.0"
-tracing = "0.1.36"
-uuid = { version = "1.17", features = ["v7"] }
-tower = "0.5.2"
-tower-http = { version = "0.6.5", features = [
+tower = { version = "0.5", features = [
+    "buffer",
+    "util",
+    "retry",
+    "make",
+    "timeout",
+] }
+tower-http = { version = "0.6.6", features = [
     "trace",
     "request-id",
     "set-header",
@@ -43,5 +46,5 @@ opentelemetry-otlp = { version = "0.29.0", features = [
 opentelemetry-semantic-conventions = { version = "0.29.0", features = [
     "semconv_experimental",
 ] }
-pin-project-lite = "0.2"
 tracing-opentelemetry = "0.30.0"
+tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
