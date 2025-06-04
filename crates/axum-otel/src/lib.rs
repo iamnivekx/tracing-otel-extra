@@ -32,7 +32,7 @@
 //!     routing::get,
 //!     Router,
 //! };
-//! use axum_otel::{AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator};
+//! use axum_otel::{AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator, Level};
 //! use tower_http::trace::TraceLayer;
 //!
 //! async fn handler() -> &'static str {
@@ -101,8 +101,8 @@ mod otel;
 mod request_id;
 
 // crate private exports
-pub(crate) use otel::set_otel_parent;
-pub(crate) use request_id::get_request_id;
+pub use otel::set_otel_parent;
+pub use request_id::get_request_id;
 
 // Exports for the tower-http::trace::TraceLayer based middleware
 pub use make_span::AxumOtelSpanCreator;

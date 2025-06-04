@@ -29,7 +29,7 @@ use tracing::{
 /// # Example
 ///
 /// ```rust
-/// use axum_otel::AxumOtelSpanCreator;
+/// use axum_otel::{AxumOtelSpanCreator, Level};
 /// use tower_http::trace::TraceLayer;
 ///
 /// let layer = TraceLayer::new_for_http()

@@ -5,7 +5,7 @@ pub const X_REQUEST_ID: HeaderName = HeaderName::from_static("x-request-id");
 pub const REQUEST_ID: HeaderName = HeaderName::from_static("request-id");
 
 /// Get the request id from the headers. `x-request-id` or `request-id` header is supported.
-pub(crate) fn get_request_id(headers: &HeaderMap) -> &str {
+pub fn get_request_id(headers: &HeaderMap) -> &str {
     headers
         .get(X_REQUEST_ID)
         .or_else(|| headers.get(REQUEST_ID))

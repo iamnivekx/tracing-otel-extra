@@ -32,12 +32,13 @@ use opentelemetry::Context;
 /// ```rust
 /// use axum::http::HeaderMap;
 /// use tracing::Span;
+/// use axum_otel::set_otel_parent;
 ///
 /// let headers = HeaderMap::new();
 /// let span = Span::current();
 /// set_otel_parent(&headers, &span);
 /// ```
-pub(crate) fn set_otel_parent(headers: &HeaderMap, span: &tracing::Span) {
+pub fn set_otel_parent(headers: &HeaderMap, span: &tracing::Span) {
     use opentelemetry::trace::TraceContextExt as _;
     use tracing_opentelemetry::OpenTelemetrySpanExt as _;
 

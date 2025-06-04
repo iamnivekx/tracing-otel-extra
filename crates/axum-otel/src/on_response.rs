@@ -15,7 +15,7 @@ use tracing::Level;
 /// # Example
 ///
 /// ```rust
-/// use axum_otel::AxumOtelOnResponse;
+/// use axum_otel::{AxumOtelOnResponse, Level};
 /// use tower_http::trace::TraceLayer;
 ///
 /// let layer = TraceLayer::new_for_http()

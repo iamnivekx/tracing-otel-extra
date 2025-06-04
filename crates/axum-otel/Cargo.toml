@@ -4,9 +4,11 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-repository.workspace = true
+keywords.workspace = true
 documentation.workspace = true
-readme.workspace = true
+repository = "https://github.com/iamnivekx/axum-otel"
+homepage = "https://github.com/iamnivekx/axum-otel"
+readme = "README.md"
 description = "OpenTelemetry tracing for axum."
 
 [dependencies]
