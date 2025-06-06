@@ -109,7 +109,7 @@ impl<B> MakeSpan<B> for AxumOtelSpanCreator {
                     otel.name = span_name,
                     otel.kind = ?SpanKind::Server,
                     otel.status_code = Empty,
-                    request_id = ?get_request_id(request.headers()),
+                    request_id = %get_request_id(request.headers()),
                     trace_id = Empty,
                 )
             }
