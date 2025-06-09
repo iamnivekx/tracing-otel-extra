@@ -34,7 +34,15 @@ where
     let layer: Box<dyn Layer<Registry> + Sync + Send> = match format {
         LogFormat::Compact => layer.compact().boxed(),
         LogFormat::Pretty => layer.pretty().boxed(),
-        LogFormat::Json => layer.json().boxed(),
+        LogFormat::Json => {
+            let fmt_format = fmt::format().json().flatten_event(true);
+            let json_fields = fmt::format::JsonFields::new();
+
+            fmt::layer()
+                .event_format(fmt_format)
+                .fmt_fields(json_fields)
+                .boxed()
+        }
     };
     layer
 }

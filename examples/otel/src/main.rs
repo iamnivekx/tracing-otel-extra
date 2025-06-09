@@ -32,7 +32,9 @@ async fn health() -> &'static str {
 #[tokio::main]
 async fn main() -> Result<()> {
     // Consider changing to anyhow::Result for broader error handling
-    Logger::default().init()?;
+    Logger::default()
+        .with_format(tracing_otel_extra::LogFormat::Json)
+        .init()?;
 
     // Setup Axum router and server
     let app = Router::new()

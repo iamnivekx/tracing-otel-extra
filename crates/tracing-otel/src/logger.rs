@@ -90,7 +90,7 @@ impl Logger {
 
     /// Initialize tracing with this configuration
     pub fn init(self) -> Result<ProviderGuard> {
-        init_logging_with_config(self)
+        init_tracing(self)
     }
 
     pub fn with_attributes(mut self, attributes: Vec<KeyValue>) -> Self {
@@ -169,8 +169,8 @@ pub(crate) fn init_meter_provider(
     meter_provider
 }
 
-/// Initialize tracing with configuration
-pub fn init_logging_with_config(cfg: Logger) -> Result<ProviderGuard> {
+/// Initialize tracing and OpenTelemetry with the given configuration
+pub fn init_tracing(cfg: Logger) -> Result<ProviderGuard> {
     // Build resource with service name and additional attributes
     let resource = get_resource(&cfg.service_name, &cfg.attributes);
     let tracer_provider = init_tracer_provider(&resource, cfg.sample_ratio);
@@ -208,7 +208,7 @@ pub fn init_logging_with_config(cfg: Logger) -> Result<ProviderGuard> {
 pub fn init_logging(service_name: &str) -> Result<ProviderGuard> {
     let logger = Logger::new(service_name);
 
-    let guard = init_logging_with_config(logger)?;
+    let guard = init_tracing(logger)?;
     // Note: The guard is dropped here, which means providers will be shut down immediately
     // This maintains backward compatibility but is not ideal
     Ok(guard)
