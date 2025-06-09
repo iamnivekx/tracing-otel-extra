@@ -31,8 +31,9 @@ async fn health() -> &'static str {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    dotenvy::dotenv().ok();
     // Consider changing to anyhow::Result for broader error handling
-    Logger::default()
+    Logger::from_env()
         .with_format(tracing_otel_extra::LogFormat::Json)
         .init()?;
 
