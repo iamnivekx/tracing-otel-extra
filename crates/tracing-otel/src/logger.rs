@@ -140,7 +140,7 @@ impl Logger {
 // Get resource with service name and attributes
 pub(crate) fn get_resource(service_name: &str, attributes: &[KeyValue]) -> Resource {
     Resource::builder()
-        .with_attribute(KeyValue::new("service.name", service_name.to_string()))
+        .with_service_name(service_name.to_string())
         .with_attributes(attributes.to_vec())
         .build()
 }
