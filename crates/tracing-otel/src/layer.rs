@@ -3,7 +3,7 @@ use opentelemetry::KeyValue;
 use serde::{Deserialize, Serialize};
 use tracing::Level;
 use tracing_subscriber::{
-    fmt::{self, MakeWriter},
+    fmt::{self, format::FmtSpan, MakeWriter},
     layer::Layer,
     registry::Registry,
     EnvFilter,
@@ -66,6 +66,7 @@ where
 {
     let layer = fmt::Layer::default()
         .with_ansi(ansi)
+        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
         .with_writer(make_writer);
     let layer: Box<dyn Layer<Registry> + Sync + Send> = match format {
         LogFormat::Compact => layer.compact().boxed(),
