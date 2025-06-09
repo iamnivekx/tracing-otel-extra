@@ -5,27 +5,16 @@ use axum::{
     Json, Router,
 };
 use axum_otel::{AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator, Level};
-use opentelemetry::trace::TracerProvider;
-use opentelemetry::{global, KeyValue};
-use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::{propagation::TraceContextPropagator, Resource};
-use opentelemetry_semantic_conventions::resource;
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
 use reqwest_tracing::TracingMiddleware;
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, LazyLock};
+use std::sync::Arc;
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
-use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
-
-static RESOURCE: LazyLock<Resource> = LazyLock::new(|| {
-    Resource::builder()
-        .with_attribute(KeyValue::new(resource::SERVICE_NAME, "articles-service"))
-        .build()
-});
+use tracing_otel_extra::Logger;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Article {
@@ -121,45 +110,9 @@ async fn create_article(
     Json(article)
 }
 
-fn init_telemetry() -> opentelemetry_sdk::trace::SdkTracerProvider {
-    global::set_text_map_propagator(TraceContextPropagator::new());
-    let otlp_exporter = opentelemetry_otlp::SpanExporter::builder()
-        .with_tonic()
-        .with_endpoint("http://localhost:4317")
-        .build()
-        .expect("Failed to build the span exporter");
-    let provider = opentelemetry_sdk::trace::SdkTracerProvider::builder()
-        .with_batch_exporter(otlp_exporter)
-        .with_resource(RESOURCE.clone())
-        .build();
-    let tracer = provider.tracer(env!("CARGO_PKG_NAME"));
-
-    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-        format!(
-            "{}=trace,tower_http=debug,axum::rejection=trace,axum_otel=trace",
-            env!("CARGO_PKG_NAME")
-        )
-        .into()
-    });
-    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
-    let formatting_layer = tracing_subscriber::fmt::layer()
-        .compact()
-        .with_writer(std::io::stdout)
-        .with_ansi(true)
-        .with_level(true);
-    let subscriber = Registry::default()
-        .with(env_filter)
-        .with(telemetry)
-        .with(formatting_layer);
-
-    tracing::subscriber::set_global_default(subscriber)
-        .expect("Failed to install `tracing` subscriber.");
-    provider
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
-    let provider = init_telemetry();
+    Logger::default().init()?;
 
     let retry_policy = ExponentialBackoff::builder().build_with_max_retries(3);
     let client: ClientWithMiddleware = ClientBuilder::new(reqwest::Client::new())
@@ -195,10 +148,6 @@ async fn main() -> Result<()> {
     let listener = TcpListener::bind("127.0.0.1:8082").await?;
     tracing::info!("Articles service listening on 127.0.0.1:8082");
     axum::serve(listener, app.into_make_service()).await?;
-
-    provider
-        .shutdown()
-        .expect("Failed to shutdown tracer provider.");
 
     Ok(())
 }

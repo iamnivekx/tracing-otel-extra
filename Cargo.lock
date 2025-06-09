@@ -39,10 +39,6 @@ dependencies = [
  "anyhow",
  "axum",
  "axum-otel",
- "opentelemetry 0.30.0",
- "opentelemetry-otlp",
- "opentelemetry-semantic-conventions",
- "opentelemetry_sdk 0.30.0",
  "reqwest",
  "reqwest-middleware",
  "reqwest-retry",
@@ -54,6 +50,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-opentelemetry 0.31.0",
+ "tracing-otel-extra",
  "tracing-subscriber",
 ]
 
@@ -159,7 +156,6 @@ dependencies = [
  "axum-otel",
  "opentelemetry 0.30.0",
  "opentelemetry-otlp",
- "opentelemetry-semantic-conventions",
  "opentelemetry_sdk 0.30.0",
  "serde",
  "serde_json",
@@ -167,8 +163,7 @@ dependencies = [
  "tower",
  "tower-http",
  "tracing",
- "tracing-opentelemetry 0.31.0",
- "tracing-subscriber",
+ "tracing-otel-extra",
 ]
 
 [[package]]
@@ -230,6 +225,15 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "chrono"
+version = "0.4.41"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c469d952047f47f91b68d1cba3f10d63c11d73e4636f24f08daf0278abf01c4d"
+dependencies = [
+ "num-traits",
+]
 
 [[package]]
 name = "core-foundation"
@@ -899,6 +903,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-traits"
+version = "0.2.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "object"
 version = "0.36.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1030,10 +1043,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry-resource-detectors"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a44e076f07fa3d76e741991f4f7d3ecbac0eed8521ced491fbdf8db77d024cf"
+dependencies = [
+ "opentelemetry 0.30.0",
+ "opentelemetry-semantic-conventions",
+ "opentelemetry_sdk 0.30.0",
+]
+
+[[package]]
 name = "opentelemetry-semantic-conventions"
 version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83d059a296a47436748557a353c5e6c5705b9470ef6c95cfc52c21a8814ddac2"
+
+[[package]]
+name = "opentelemetry-stdout"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "447191061af41c3943e082ea359ab8b64ff27d6d34d30d327df309ddef1eef6f"
+dependencies = [
+ "chrono",
+ "opentelemetry 0.30.0",
+ "opentelemetry_sdk 0.30.0",
+]
 
 [[package]]
 name = "opentelemetry_sdk"
@@ -2046,6 +2081,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-otel-extra"
+version = "0.30.3"
+dependencies = [
+ "anyhow",
+ "opentelemetry 0.30.0",
+ "opentelemetry-otlp",
+ "opentelemetry-resource-detectors",
+ "opentelemetry-stdout",
+ "opentelemetry_sdk 0.30.0",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tracing",
+ "tracing-opentelemetry 0.31.0",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "tracing-serde"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "704b1aeb7be0d0a84fc9828cae51dab5970fee5088f83d1dd7ee6f6246fc6ff1"
+dependencies = [
+ "serde",
+ "tracing-core",
+]
+
+[[package]]
 name = "tracing-subscriber"
 version = "0.3.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2055,12 +2118,15 @@ dependencies = [
  "nu-ansi-term",
  "once_cell",
  "regex",
+ "serde",
+ "serde_json",
  "sharded-slab",
  "smallvec",
  "thread_local",
  "tracing",
  "tracing-core",
  "tracing-log",
+ "tracing-serde",
 ]
 
 [[package]]
@@ -2101,7 +2167,6 @@ dependencies = [
  "axum-otel",
  "opentelemetry 0.30.0",
  "opentelemetry-otlp",
- "opentelemetry-semantic-conventions",
  "opentelemetry_sdk 0.30.0",
  "serde",
  "serde_json",
@@ -2109,8 +2174,7 @@ dependencies = [
  "tower",
  "tower-http",
  "tracing",
- "tracing-opentelemetry 0.31.0",
- "tracing-subscriber",
+ "tracing-otel-extra",
 ]
 
 [[package]]

@@ -8,6 +8,8 @@ license.workspace = true
 [dependencies]
 axum = { workspace = true }
 axum-otel = { path = "../../../crates/axum-otel" }
+tracing-otel-extra = { path = "../../../crates/tracing-otel" }
+
 tower = { workspace = true }
 tower-http = { workspace = true, features = ["request-id"] }
 tracing-subscriber = { workspace = true }
@@ -15,10 +17,6 @@ tracing-opentelemetry = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-opentelemetry = { workspace = true }
-opentelemetry-otlp = { workspace = true }
-opentelemetry_sdk = { workspace = true }
-opentelemetry-semantic-conventions = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 
