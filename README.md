@@ -5,6 +5,7 @@ A collection of tracing and logging utilities for Axum web framework.
 ## Crates
 
 - [axum-otel](./crates/axum-otel/README.md) - OpenTelemetry tracing for axum
+- [tracing-otel](./crates/tracing-otel/README.md) - OpenTelemetry tracing support for tracing-subscriber
 
 ## Examples
 
