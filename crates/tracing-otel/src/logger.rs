@@ -56,11 +56,6 @@ pub struct Logger {
     pub metrics_interval_secs: u64,
     #[cfg_attr(
         feature = "env",
-        arg(long, env = "ENABLE_STDOUT_METRICS", default_value = "true")
-    )]
-    pub enable_stdout_metrics: bool,
-    #[cfg_attr(
-        feature = "env",
         arg(long, env = "ATTRIBUTES", value_parser = parse_attributes, default_missing_value="")
     )]
     pub attributes: Vec<KeyValue>,
@@ -75,7 +70,6 @@ impl Default for Logger {
             level: Level::INFO,
             sample_ratio: 1.0,
             metrics_interval_secs: 30,
-            enable_stdout_metrics: true,
             attributes: vec![],
         }
     }
@@ -93,6 +87,12 @@ impl Logger {
     #[cfg(feature = "env")]
     pub fn from_env() -> Self {
         Self::parse()
+    }
+
+    /// Set the service name
+    pub fn with_service_name(mut self, service_name: impl Into<String>) -> Self {
+        self.service_name = service_name.into();
+        self
     }
 
     /// Set the log format
@@ -125,12 +125,6 @@ impl Logger {
         self
     }
 
-    /// Set whether to enable stdout metrics output
-    pub fn with_enable_stdout_metrics(mut self, enable: bool) -> Self {
-        self.enable_stdout_metrics = enable;
-        self
-    }
-
     /// Add custom attributes to the resource
     pub fn with_attributes(mut self, attributes: Vec<KeyValue>) -> Self {
         self.attributes = attributes;
@@ -151,7 +145,7 @@ pub(crate) fn get_resource(service_name: &str, attributes: &[KeyValue]) -> Resou
         .build()
 }
 
-// Construct TracerProvider for OpenTelemetryLayer
+/// Construct TracerProvider for OpenTelemetryLayer
 pub(crate) fn init_tracer_provider(
     resource: &Resource,
     sample_ratio: f64,
@@ -171,11 +165,10 @@ pub(crate) fn init_tracer_provider(
         .build())
 }
 
-// Construct MeterProvider for MetricsLayer
+/// Construct MeterProvider for MetricsLayer
 pub(crate) fn init_meter_provider(
     resource: &Resource,
     metrics_interval_secs: u64,
-    enable_stdout_metrics: bool,
 ) -> Result<SdkMeterProvider> {
     let exporter = opentelemetry_otlp::MetricExporter::builder()
         .with_tonic()
@@ -187,15 +180,9 @@ pub(crate) fn init_meter_provider(
         .with_interval(std::time::Duration::from_secs(metrics_interval_secs))
         .build();
 
-    let mut meter_builder = MeterProviderBuilder::default()
+    let meter_builder = MeterProviderBuilder::default()
         .with_resource(resource.clone())
         .with_reader(reader);
-
-    if enable_stdout_metrics {
-        let stdout_reader =
-            PeriodicReader::builder(opentelemetry_stdout::MetricExporter::default()).build();
-        meter_builder = meter_builder.with_reader(stdout_reader);
-    }
 
     let meter_provider = meter_builder.build();
     global::set_meter_provider(meter_provider.clone());
@@ -208,11 +195,7 @@ pub fn init_tracing(cfg: Logger) -> Result<ProviderGuard> {
     // Build resource with service name and additional attributes
     let resource = get_resource(&cfg.service_name, &cfg.attributes);
     let tracer_provider = init_tracer_provider(&resource, cfg.sample_ratio)?;
-    let meter_provider = init_meter_provider(
-        &resource,
-        cfg.metrics_interval_secs,
-        cfg.enable_stdout_metrics,
-    )?;
+    let meter_provider = init_meter_provider(&resource, cfg.metrics_interval_secs)?;
 
     // Set up format layer
     let env_filter = init_env_filter(&cfg.level);
