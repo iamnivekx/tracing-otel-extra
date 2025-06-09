@@ -10,7 +10,7 @@ resolver = "2"
 
 [workspace.package]
 rust-version = "1.82"
-version = "0.30.5"
+version = "0.30.6-alpha.1"
 authors = ["nivek <h49987180@gmail.com>"]
 edition = "2021"
 license = "MIT/Apache-2.0"

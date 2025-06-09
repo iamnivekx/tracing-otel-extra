@@ -14,8 +14,10 @@ keywords = ["tracing", "opentelemetry", "logging"]
 
 [dependencies]
 anyhow = { workspace = true }
+
 serde = { workspace = true }
 serde_json = { workspace = true }
+
 opentelemetry = { workspace = true }
 opentelemetry_sdk = { workspace = true }
 opentelemetry-otlp = { workspace = true }
@@ -23,6 +25,8 @@ opentelemetry-otlp = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["json"] }
+
+# Optional dependencies
 clap = { workspace = true, features = ["derive", "env"], optional = true }
 
 [dev-dependencies]
