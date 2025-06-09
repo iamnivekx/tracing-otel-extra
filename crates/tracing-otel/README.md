@@ -8,13 +8,13 @@ A tracing and OpenTelemetry integration utility library for Rust applications, p
 
 ## Features
 
-- 🚀 **Easy to Use** - Simple configuration of tracing and OpenTelemetry through Builder pattern
-- 📊 **Multiple Output Formats** - Support for Compact, Pretty, and JSON formats
-- 🔧 **Flexible Configuration** - Configurable sampling rates, log levels, metrics collection intervals, etc.
-- 🧹 **Automatic Resource Cleanup** - Automatic management of TracerProvider and MeterProvider through RAII pattern
-- 📈 **Built-in Metrics Support** - Integrated OpenTelemetry metrics collection and export
-- 🔍 **Environment Detection** - Automatic detection of operating system and process information
-- 🎯 **OTLP Export** - Built-in OTLP protocol support, can directly export to Jaeger, etc.
+- **Easy to Use** - Simple configuration of tracing and OpenTelemetry through Builder pattern
+- **Multiple Output Formats** - Support for Compact, Pretty, and JSON formats
+- **Flexible Configuration** - Configurable sampling rates, log levels, metrics collection intervals, etc.
+- **Automatic Resource Cleanup** - Automatic management of TracerProvider and MeterProvider through RAII pattern
+- **Built-in Metrics Support** - Integrated OpenTelemetry metrics collection and export
+- **Environment Detection** - Automatic detection of operating system and process information
+- **OTLP Export** - Built-in OTLP protocol support, can directly export to Jaeger, OTEL Collector, etc.
 
 ## Quick Start
 

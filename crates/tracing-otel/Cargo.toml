@@ -4,12 +4,12 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-repository.workspace = true
 description = "Bootstrap utilities for tracing and OpenTelemetry integration."
 keywords.workspace = true
 categories.workspace = true
-homepage = "https://github.com/iamnivekx/axum-otel/tree/main/crates/tracing-otel"
+repository = "https://github.com/iamnivekx/tracing-otel-extra#crates/tracing-otel"
 documentation = "https://docs.rs/tracing-otel-extra"
+homepage = "https://github.com/iamnivekx/tracing-otel-extra#crates/tracing-otel"
 readme = "README.md"
 
 [dependencies]

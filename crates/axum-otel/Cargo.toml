@@ -5,9 +5,9 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 description = "OpenTelemetry tracing for axum based on tower-http."
-repository = "https://github.com/iamnivekx/axum-otel"
-homepage = "https://github.com/iamnivekx/axum-otel/tree/main/crates/axum-otel"
+repository = "https://github.com/iamnivekx/tracing-otel-extra#crates/axum-otel"
 documentation = "https://docs.rs/axum-otel"
+homepage = "https://github.com/iamnivekx/tracing-otel-extra#crates/axum-otel"
 readme = "README.md"
 
 [dependencies]
