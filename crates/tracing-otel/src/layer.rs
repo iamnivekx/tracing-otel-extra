@@ -22,6 +22,7 @@ pub enum LogFormat {
 }
 
 // Parse log format from string
+#[allow(dead_code)]
 pub(crate) fn parse_log_format(s: &str) -> Result<LogFormat> {
     match s.to_lowercase().as_str().trim() {
         "compact" => Ok(LogFormat::Compact),
@@ -32,6 +33,7 @@ pub(crate) fn parse_log_format(s: &str) -> Result<LogFormat> {
 }
 
 // Parse attributes from string
+#[allow(dead_code)]
 pub(crate) fn parse_attributes(s: &str) -> Result<Vec<KeyValue>> {
     s.trim()
         .split(',')
