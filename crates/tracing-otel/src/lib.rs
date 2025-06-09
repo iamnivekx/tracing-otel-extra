@@ -7,13 +7,13 @@
 //!
 //! Basic usage with configuration builder:
 //! ```rust,no_run
-//! use tracing_extra::{Logger, Format};
+//! use tracing_otel_extra::{Logger, LogFormat};
 //! use opentelemetry::KeyValue;
 //!
 //! #[tokio::main]
 //! async fn main() {
 //!     let _guard = Logger::new("my-service")
-//!         .with_format(Format::Json)
+//!         .with_format(LogFormat::Json)
 //!         .with_ansi(false)
 //!         .with_sample_ratio(0.1)
 //!         .with_attributes(vec![
@@ -31,7 +31,7 @@
 //!
 //! Legacy usage (for backward compatibility):
 //! ```rust,no_run
-//! use tracing_extra::init_logging;
+//! use tracing_otel_extra::init_logging;
 //!
 //! #[tokio::main]
 //! async fn main() {
