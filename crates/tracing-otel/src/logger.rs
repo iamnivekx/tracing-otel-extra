@@ -204,10 +204,10 @@ pub fn init_tracing(cfg: Logger) -> Result<ProviderGuard> {
     let tracer_provider = init_tracer_provider(&resource, cfg.sample_ratio)?;
     let meter_provider = init_meter_provider(&resource, cfg.metrics_interval_secs)?;
 
-    // Set up format layer
+    // Set up env filter
     let env_filter = init_env_filter(&cfg.level);
+    // Set up format layer
     let fmt_layer = init_format_layer(cfg.format, cfg.ansi);
-
     // Set up telemetry layer with tracer
     let tracer = tracer_provider.tracer(cfg.service_name.clone());
     let metrics_layer = MetricsLayer::new(meter_provider.clone());
