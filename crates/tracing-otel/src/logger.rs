@@ -1,23 +1,16 @@
 use crate::{
     guard::ProviderGuard,
-    layer::{init_env_filter, init_format_layer, LogFormat},
+    layer::{
+        deserialize_attributes, deserialize_level, deserialize_log_format, init_env_filter,
+        init_format_layer, LogFormat,
+    },
+    otel::{get_resource, init_meter_provider, init_tracer_provider},
 };
 use anyhow::{Context, Result};
-use opentelemetry::{global, trace::TracerProvider as _, KeyValue};
-use opentelemetry_sdk::{
-    metrics::{MeterProviderBuilder, PeriodicReader, SdkMeterProvider},
-    propagation::TraceContextPropagator,
-    trace::{RandomIdGenerator, Sampler, SdkTracerProvider},
-    Resource,
-};
+use opentelemetry::{trace::TracerProvider as _, KeyValue};
 use tracing::Level;
 use tracing_opentelemetry::MetricsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
-#[cfg(feature = "env")]
-use crate::layer::{parse_attributes, parse_log_format};
-#[cfg(feature = "env")]
-use clap::Parser;
 
 /// Configuration for the OpenTelemetry tracing and logging system.
 ///
@@ -27,49 +20,110 @@ use clap::Parser;
 /// - Log format and level
 /// - Sampling ratio
 /// - Metrics collection settings
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "env", derive(Parser))]
-#[cfg_attr(feature = "env", command(author, version, about, long_about = None))]
+///
+/// # Examples
+///
+/// ```rust
+/// use tracing_otel_extra::Logger;
+/// use tracing::Level;
+///
+/// // Create with default settings
+/// let logger = Logger::new("my-service");
+///
+/// // Create with custom settings
+/// let logger = Logger::new("my-service")
+///     .with_level(Level::DEBUG)
+///     .with_sample_ratio(0.5);
+///
+/// // Initialize from environment variables
+/// #[cfg(feature = "env")]
+/// {
+///     // Using default prefix "LOG_"
+///     let logger = Logger::from_env(None).unwrap();
+///
+///     // Using custom prefix "MY_APP_"
+///     let logger = Logger::from_env(Some("MY_APP_")).unwrap();
+/// }
+/// ```
+///
+/// # Environment Variables
+///
+/// When using `from_env`, the following environment variables can be set:
+///
+/// - `LOG_SERVICE_NAME`: Service name (defaults to crate name)
+/// - `LOG_FORMAT`: Log format, one of "compact", "pretty", or "json" (defaults to "compact")
+/// - `LOG_ANSI`: Whether to use ANSI colors (defaults to true)
+/// - `LOG_LEVEL`: Log level (defaults to "info")
+/// - `LOG_SAMPLE_RATIO`: Sampling ratio from 0.0 to 1.0 (defaults to 1.0)
+/// - `LOG_METRICS_INTERVAL_SECS`: Metrics collection interval in seconds (defaults to 30)
+/// - `LOG_ATTRIBUTES`: Comma-separated list of key=value pairs for additional attributes
+///
+/// # Examples of Environment Variables
+///
+/// ```bash
+/// # Basic configuration
+/// LOG_SERVICE_NAME=my-service
+/// LOG_LEVEL=debug
+///
+/// # Advanced configuration
+/// LOG_FORMAT=json
+/// LOG_ANSI=false
+/// LOG_SAMPLE_RATIO=0.5
+/// LOG_METRICS_INTERVAL_SECS=60
+/// LOG_ATTRIBUTES=environment=prod,region=us-west
+/// ```
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct Logger {
-    #[cfg_attr(
-        feature = "env",
-        arg(long, env = "SERVICE_NAME", default_value = env!("CARGO_CRATE_NAME"))
-    )]
+    /// The name of the service being traced
+    #[serde(default = "default_service_name")]
     pub service_name: String,
-    #[cfg_attr(
-        feature = "env",
-        arg(long, env = "LOG_FORMAT", value_parser = parse_log_format, default_value = "compact")
+    /// The format to use for log output
+    #[serde(
+        deserialize_with = "deserialize_log_format",
+        default = "LogFormat::default"
     )]
     pub format: LogFormat,
-    #[cfg_attr(feature = "env", arg(long, env = "LOG_ANSI", default_value = "true"))]
+    /// Whether to use ANSI colors in the output
+    #[serde(default)]
     pub ansi: bool,
-    #[cfg_attr(feature = "env", arg(long, env = "LOG_LEVEL", default_value = "info"))]
+    /// The minimum log level to record
+    #[serde(deserialize_with = "deserialize_level", default = "default_level")]
     pub level: Level,
-    #[cfg_attr(
-        feature = "env",
-        arg(long, env = "SAMPLE_RATIO", default_value = "1.0")
-    )]
+    /// The ratio of traces to sample (0.0 to 1.0)
+    #[serde(default = "default_sample_ratio")]
     pub sample_ratio: f64,
-    #[cfg_attr(
-        feature = "env",
-        arg(long, env = "METRICS_INTERVAL_SECS", default_value = "30")
-    )]
+    /// The interval in seconds between metrics collection
+    #[serde(default = "default_metrics_interval_secs")]
     pub metrics_interval_secs: u64,
-    #[cfg_attr(
-        feature = "env",
-        arg(long, env = "ATTRIBUTES", value_parser = parse_attributes, default_missing_value="")
-    )]
+    /// Additional attributes to add to the resource
+    #[serde(default, deserialize_with = "deserialize_attributes")]
     pub attributes: Vec<KeyValue>,
+}
+
+fn default_service_name() -> String {
+    env!("CARGO_CRATE_NAME").to_string()
+}
+
+fn default_level() -> Level {
+    Level::INFO
+}
+
+fn default_sample_ratio() -> f64 {
+    1.0
+}
+
+fn default_metrics_interval_secs() -> u64 {
+    30
 }
 
 impl Default for Logger {
     fn default() -> Self {
         Self {
-            service_name: env!("CARGO_CRATE_NAME").to_string(),
+            service_name: default_service_name(),
             format: LogFormat::default(),
             ansi: true,
-            level: Level::INFO,
-            sample_ratio: 1.0,
+            level: default_level(),
+            sample_ratio: default_sample_ratio(),
             metrics_interval_secs: 30,
             attributes: vec![],
         }
@@ -78,16 +132,23 @@ impl Default for Logger {
 
 impl Logger {
     /// Create a new configuration with the given service name
+    ///
+    /// # Arguments
+    ///
+    /// * `service_name` - The name of the service being traced
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use tracing_otel_extra::Logger;
+    ///
+    /// let logger = Logger::new("my-service");
+    /// ```
     pub fn new(service_name: impl Into<String>) -> Self {
         Self {
             service_name: service_name.into(),
             ..Default::default()
         }
-    }
-
-    #[cfg(feature = "env")]
-    pub fn from_env() -> Self {
-        Self::parse()
     }
 
     /// Set the service name
@@ -132,69 +193,45 @@ impl Logger {
         self
     }
 
+    /// Initialize the logger from environment variables
+    ///
+    /// This method requires the "env" feature to be enabled.
+    ///
+    /// # Arguments
+    ///
+    /// * `prefix` - Optional prefix for environment variables. If None, "LOG_" is used.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the configured `Logger` or an error if the
+    /// environment variables could not be parsed.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use tracing_otel_extra::Logger;
+    /// #[cfg(feature = "env")]
+    /// {
+    ///     // Using default prefix "LOG_"
+    ///     let logger = Logger::from_env(None).unwrap();
+    ///
+    ///     // Using custom prefix "MY_APP_"
+    ///     let logger = Logger::from_env(Some("MY_APP_")).unwrap();
+    /// }
+    /// ```
+    #[cfg(feature = "env")]
+    pub fn from_env(prefix: Option<&str>) -> Result<Self> {
+        let prefix = prefix.unwrap_or("LOG_");
+        let logger = envy::prefixed(prefix)
+            .from_env()
+            .context("Failed to deserialize environment configuration")?;
+        Ok(logger)
+    }
+
     /// Initialize tracing with this configuration
     pub fn init(self) -> Result<ProviderGuard> {
         init_tracing(self)
     }
-}
-
-// Get resource with service name and attributes
-pub(crate) fn get_resource(service_name: &str, attributes: &[KeyValue]) -> Resource {
-    Resource::builder()
-        .with_service_name(service_name.to_string())
-        .with_attributes(attributes.to_vec())
-        .build()
-}
-
-/// Construct TracerProvider for OpenTelemetryLayer
-pub(crate) fn init_tracer_provider(
-    resource: &Resource,
-    sample_ratio: f64,
-) -> Result<SdkTracerProvider> {
-    global::set_text_map_propagator(TraceContextPropagator::new());
-
-    let exporter = opentelemetry_otlp::SpanExporter::builder()
-        .with_tonic()
-        .build()
-        .context("Failed to build OTLP exporter")?;
-
-    let tracer_provider = SdkTracerProvider::builder()
-        .with_sampler(Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(
-            sample_ratio,
-        ))))
-        .with_id_generator(RandomIdGenerator::default())
-        .with_resource(resource.clone())
-        .with_batch_exporter(exporter)
-        .build();
-
-    global::set_tracer_provider(tracer_provider.clone());
-
-    Ok(tracer_provider)
-}
-
-/// Construct MeterProvider for MetricsLayer
-pub(crate) fn init_meter_provider(
-    resource: &Resource,
-    metrics_interval_secs: u64,
-) -> Result<SdkMeterProvider> {
-    let exporter = opentelemetry_otlp::MetricExporter::builder()
-        .with_tonic()
-        .with_temporality(opentelemetry_sdk::metrics::Temporality::default())
-        .build()
-        .context("Failed to build OTLP exporter")?;
-
-    let reader = PeriodicReader::builder(exporter)
-        .with_interval(std::time::Duration::from_secs(metrics_interval_secs))
-        .build();
-
-    let meter_builder = MeterProviderBuilder::default()
-        .with_resource(resource.clone())
-        .with_reader(reader);
-
-    let meter_provider = meter_builder.build();
-    global::set_meter_provider(meter_provider.clone());
-
-    Ok(meter_provider)
 }
 
 /// Initialize tracing and OpenTelemetry with the given configuration
@@ -229,6 +266,21 @@ pub fn init_tracing(cfg: Logger) -> Result<ProviderGuard> {
 /// Convenience function to initialize tracing with default settings
 pub fn init_logging(service_name: &str) -> Result<ProviderGuard> {
     let logger = Logger::new(service_name);
+    init_tracing(logger)
+}
+
+#[cfg(feature = "env")]
+pub fn init_logger_from_env(prefix: Option<&str>) -> Result<Logger> {
+    let prefix = prefix.unwrap_or("LOG_");
+    let logger = envy::prefixed(prefix)
+        .from_env()
+        .context("Failed to deserialize environment variables")?;
+    Ok(logger)
+}
+
+#[cfg(feature = "env")]
+pub fn init_logging_from_env(prefix: Option<&str>) -> Result<ProviderGuard> {
+    let logger = init_logger_from_env(prefix)?;
     init_tracing(logger)
 }
 

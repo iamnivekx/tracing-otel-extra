@@ -33,9 +33,8 @@ async fn health() -> &'static str {
 async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
     // Consider changing to anyhow::Result for broader error handling
-    Logger::from_env()
-        .with_format(tracing_otel_extra::LogFormat::Json)
-        .init()?;
+    let logger = Logger::from_env(Some("LOG_"))?;
+    logger.init()?;
 
     // Setup Axum router and server
     let app = Router::new()

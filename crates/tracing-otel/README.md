@@ -65,7 +65,6 @@ async fn main() -> anyhow::Result<()> {
         .with_attributes(vec![                  // Add custom attributes
             KeyValue::new("environment", "production"),
             KeyValue::new("version", "1.2.3"),
-            KeyValue::new("region", "us-west-2"),
         ])
         .init()?;
     

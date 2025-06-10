@@ -43,6 +43,7 @@
 pub mod guard;
 pub mod layer;
 pub mod logger;
+pub mod otel;
 
 // Re-export the main types for convenience
 pub use guard::ProviderGuard;
