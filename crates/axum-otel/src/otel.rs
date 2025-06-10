@@ -1,5 +1,32 @@
 use axum::http::HeaderMap;
-use opentelemetry::Context;
+use opentelemetry::trace::TraceContextExt as _;
+use opentelemetry::{Context, TraceId};
+use tracing::{error, info, Span};
+use tracing_opentelemetry::OpenTelemetrySpanExt as _;
+
+/// Returns the `trace_id` of the current span according to the global tracing subscriber.
+///
+/// # Example
+///
+/// ```rust
+/// use axum_otel::current_trace_id;
+/// use tracing::info_span;
+/// use opentelemetry::trace::TraceContextExt as _;
+/// use tracing_opentelemetry::OpenTelemetrySpanExt as _;
+///
+/// let span = info_span!("test span");
+/// let _entered = span.enter();
+/// let trace_id = current_trace_id();
+/// println!("trace_id: {}", trace_id);
+/// assert_eq!(trace_id, span.context().span().span_context().trace_id());
+/// ```
+pub fn current_trace_id() -> TraceId {
+    tracing::Span::current()
+        .context()
+        .span()
+        .span_context()
+        .trace_id()
+}
 
 /// Set the parent span for the current span and record the trace id.
 ///
@@ -39,9 +66,6 @@ use opentelemetry::Context;
 /// set_otel_parent(&headers, &span);
 /// ```
 pub fn set_otel_parent(headers: &HeaderMap, span: &tracing::Span) {
-    use opentelemetry::trace::TraceContextExt as _;
-    use tracing_opentelemetry::OpenTelemetrySpanExt as _;
-
     let remote_context = opentelemetry::global::get_text_map_propagator(|propagator| {
         propagator.extract(&opentelemetry_http::HeaderExtractor(headers))
     });
@@ -167,5 +191,15 @@ mod tests {
             trace_id, expected_trace_id,
             "Expected trace ID to match the one from the header"
         );
+    }
+
+    #[tokio::test]
+    async fn test_current_trace_id() {
+        init_tracing();
+        let span = create_span();
+        let _entered = span.enter();
+        let outer_trace_id = span.context().span().span_context().trace_id();
+        let trace_id = current_trace_id();
+        assert_eq!(outer_trace_id, trace_id);
     }
 }
