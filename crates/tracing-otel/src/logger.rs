@@ -6,6 +6,7 @@ use anyhow::{Context, Result};
 use opentelemetry::{global, trace::TracerProvider as _, KeyValue};
 use opentelemetry_sdk::{
     metrics::{MeterProviderBuilder, PeriodicReader, SdkMeterProvider},
+    propagation::TraceContextPropagator,
     trace::{RandomIdGenerator, Sampler, SdkTracerProvider},
     Resource,
 };
@@ -150,19 +151,25 @@ pub(crate) fn init_tracer_provider(
     resource: &Resource,
     sample_ratio: f64,
 ) -> Result<SdkTracerProvider> {
+    global::set_text_map_propagator(TraceContextPropagator::new());
+
     let exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_tonic()
         .build()
         .context("Failed to build OTLP exporter")?;
 
-    Ok(SdkTracerProvider::builder()
+    let tracer_provider = SdkTracerProvider::builder()
         .with_sampler(Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(
             sample_ratio,
         ))))
         .with_id_generator(RandomIdGenerator::default())
         .with_resource(resource.clone())
         .with_batch_exporter(exporter)
-        .build())
+        .build();
+
+    global::set_tracer_provider(tracer_provider.clone());
+
+    Ok(tracer_provider)
 }
 
 /// Construct MeterProvider for MetricsLayer
@@ -199,7 +206,7 @@ pub fn init_tracing(cfg: Logger) -> Result<ProviderGuard> {
 
     // Set up format layer
     let env_filter = init_env_filter(&cfg.level);
-    let format_layer = init_format_layer(std::io::stdout, cfg.format, cfg.ansi);
+    let fmt_layer = init_format_layer(cfg.format, cfg.ansi);
 
     // Set up telemetry layer with tracer
     let tracer = tracer_provider.tracer(cfg.service_name.clone());
@@ -207,7 +214,7 @@ pub fn init_tracing(cfg: Logger) -> Result<ProviderGuard> {
     let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
 
     tracing_subscriber::registry()
-        .with(format_layer)
+        .with(fmt_layer)
         .with(metrics_layer)
         .with(otel_layer)
         .with(env_filter)

@@ -66,7 +66,7 @@ mod otel;
 mod request_id;
 
 // re-exports crates library
-pub use otel::set_otel_parent;
+pub use otel::{current_trace_id, set_otel_parent};
 pub use request_id::get_request_id;
 
 // Exports for the tower-http::trace::TraceLayer based middleware
