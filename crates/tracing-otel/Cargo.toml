@@ -34,5 +34,5 @@ tokio = { workspace = true }
 
 [features]
 default = ["http"]
-env = ["envy"]
-http = ["opentelemetry-http"]
+http = ["dep:opentelemetry-http"]
+env = ["dep:envy"]
