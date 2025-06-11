@@ -21,6 +21,7 @@ serde_json = { workspace = true }
 opentelemetry = { workspace = true }
 opentelemetry_sdk = { workspace = true }
 opentelemetry-otlp = { workspace = true }
+opentelemetry-http = { workspace = true, optional = true }
 
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
@@ -32,4 +33,6 @@ envy = { workspace = true, optional = true }
 tokio = { workspace = true }
 
 [features]
+default = ["http"]
 env = ["envy"]
+http = ["opentelemetry-http"]

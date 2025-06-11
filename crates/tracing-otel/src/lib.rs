@@ -41,6 +41,8 @@
 //! }
 //! ```
 pub mod guard;
+#[cfg(feature = "http")]
+pub mod http;
 pub mod layer;
 pub mod logger;
 pub mod otel;
@@ -50,3 +52,8 @@ pub use guard::ProviderGuard;
 
 pub use layer::LogFormat;
 pub use logger::{init_logging, Logger};
+
+#[cfg(feature = "http")]
+pub use http::{
+    extract_context_from_request, inject_context_into_request, inject_context_into_response,
+};

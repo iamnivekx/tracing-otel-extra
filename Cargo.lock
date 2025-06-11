@@ -2057,6 +2057,7 @@ dependencies = [
  "anyhow",
  "envy",
  "opentelemetry 0.30.0",
+ "opentelemetry-http",
  "opentelemetry-otlp",
  "opentelemetry_sdk 0.30.0",
  "serde",
