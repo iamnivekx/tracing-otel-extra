@@ -67,8 +67,7 @@
 //!     #[cfg(feature = "env")]
 //!     {
 //!         // Using default prefix "LOG_"
-//!         let guard = Logger::from_env(None)?.init()?;
-//!
+//!         // let guard = Logger::from_env(None)?.init()?;
 //!         // Or with custom prefix
 //!         let guard = Logger::from_env(Some("MY_APP_"))?.init()?;
 //!     }
@@ -133,7 +132,7 @@ use tracing::Level;
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
 ///     // Create with default settings
-///     let guard = Logger::new("my-service").init()?;
+///     // let guard = Logger::new("my-service").init()?;
 ///
 ///     // Create with custom settings
 ///     let guard = Logger::new("my-service")
@@ -283,6 +282,11 @@ impl Logger {
 
     /// Initialize tracing with this configuration.
     ///
+    /// This method will:
+    /// 1. Set up the global tracing subscriber
+    /// 2. Configure the OpenTelemetry tracer and meter providers
+    /// 3. Return a guard that ensures proper cleanup
+    ///
     /// # Returns
     ///
     /// Returns a `Result` containing a `ProviderGuard` that will automatically
@@ -290,21 +294,50 @@ impl Logger {
     ///
     /// # Examples
     ///
+    /// Basic usage:
     /// ```rust
     /// use tracing_otel_extra::Logger;
     ///
     /// #[tokio::main]
     /// async fn main() -> anyhow::Result<()> {
-    ///     let guard = Logger::new("my-service")
-    ///         .with_level(tracing::Level::DEBUG)
-    ///         .with_sample_ratio(0.5)
-    ///         .init()?;
+    ///     // Create with default settings
+    ///     let guard = Logger::new("my-service").init()?;
     ///     
-    ///     // Your application code here...
+    ///     // Use tracing...
+    ///     tracing::info!("Hello, world!");
     ///     
     ///     Ok(())
     /// }
     /// ```
+    ///
+    /// Advanced configuration:
+    /// ```rust
+    /// use tracing_otel_extra::Logger;
+    /// use tracing::Level;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> anyhow::Result<()> {
+    ///     // Create with custom settings
+    ///     let guard = Logger::new("my-service")
+    ///         .with_level(Level::DEBUG)
+    ///         .with_sample_ratio(0.5)
+    ///         .with_metrics_interval_secs(30)
+    ///         .init()?;
+    ///     
+    ///     // Use tracing with custom configuration
+    ///     tracing::debug!("Debug message");
+    ///     tracing::info!("Info message");
+    ///     
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Failed to initialize the tracing subscriber
+    /// - Failed to set up OpenTelemetry providers
+    /// - Failed to configure the environment filter
     pub fn init(self) -> Result<ProviderGuard> {
         init_tracing_from_logger(self)
     }
