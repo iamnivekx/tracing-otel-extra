@@ -6,7 +6,6 @@ use tracing_subscriber::{
     fmt::{self, format::FmtSpan},
     layer::Layer,
     registry::Registry,
-    EnvFilter,
 };
 
 // Define an enumeration for log formats
@@ -32,7 +31,7 @@ where
         "pretty" => Ok(LogFormat::Pretty),
         "json" => Ok(LogFormat::Json),
         _ => Err(serde::de::Error::custom(format!(
-            "Invalid log format: {}",
+            "Invalid log format: '{}'",
             s
         ))),
     }
@@ -79,13 +78,12 @@ where
     s.parse().map_err(serde::de::Error::custom)
 }
 
-// Initialize format layer
-pub fn init_format_layer(format: LogFormat, ansi: bool) -> Box<dyn Layer<Registry> + Sync + Send> {
-    let layer = fmt::Layer::default()
-        .with_ansi(ansi)
-        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE);
-
-    let layer: Box<dyn Layer<Registry> + Sync + Send> = match format {
+// Configure layer based on log format
+pub fn configure_log_format(
+    layer: fmt::Layer<Registry>,
+    format: LogFormat,
+) -> Box<dyn Layer<Registry> + Send + Sync> {
+    match format {
         LogFormat::Compact => layer.compact().boxed(),
         LogFormat::Pretty => layer.pretty().boxed(),
         LogFormat::Json => {
@@ -96,13 +94,16 @@ pub fn init_format_layer(format: LogFormat, ansi: bool) -> Box<dyn Layer<Registr
                 .fmt_fields(json_fields)
                 .boxed()
         }
-    };
-    layer
+    }
 }
 
-// Initialize env filter from level
-pub(crate) fn init_env_filter(level: &Level) -> EnvFilter {
-    EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(level.to_string()))
+// Initialize format layer
+pub fn init_format_layer(format: LogFormat, ansi: bool) -> Box<dyn Layer<Registry> + Sync + Send> {
+    let layer = fmt::Layer::default()
+        .with_ansi(ansi)
+        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE);
+
+    configure_log_format(layer, format)
 }
 
 #[cfg(test)]
@@ -124,6 +125,13 @@ mod tests {
         assert_eq!(
             deserialize_log_format::<StrDeserializer>("json".into_deserializer()).unwrap(),
             LogFormat::Json
+        );
+
+        assert_eq!(
+            deserialize_log_format::<StrDeserializer>("default_string".into_deserializer())
+                .unwrap_err()
+                .to_string(),
+            "Invalid log format: 'default_string'"
         );
     }
 
@@ -161,10 +169,13 @@ mod tests {
         assert_eq!(attrs[1].key.as_str(), "key2");
         assert_eq!(attrs[1].value.as_str(), "value2");
 
-        // // Test invalid formats
-        // assert!(deserialize_attributes("key1".into_deserializer()).is_err());
-        // assert!(deserialize_attributes("key1=".into_deserializer()).is_err());
-        // assert!(deserialize_attributes("=value1".into_deserializer()).is_err());
-        // assert!(deserialize_attributes("key1=value1,invalid".into_deserializer()).is_err());
+        // Test invalid formats
+        assert!(deserialize_attributes::<StrDeserializer>("key1".into_deserializer()).is_err());
+        assert!(deserialize_attributes::<StrDeserializer>("key1=".into_deserializer()).is_err());
+        assert!(deserialize_attributes::<StrDeserializer>("=value1".into_deserializer()).is_err());
+        assert!(deserialize_attributes::<StrDeserializer>(
+            "key1=value1,invalid".into_deserializer()
+        )
+        .is_err());
     }
 }

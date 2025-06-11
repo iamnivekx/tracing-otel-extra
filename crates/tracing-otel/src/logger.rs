@@ -1,16 +1,14 @@
 use crate::{
     guard::ProviderGuard,
     layer::{
-        deserialize_attributes, deserialize_level, deserialize_log_format, init_env_filter,
-        init_format_layer, LogFormat,
+        deserialize_attributes, deserialize_level, deserialize_log_format, init_format_layer,
+        LogFormat,
     },
-    otel::{get_resource, init_meter_provider, init_tracer_provider},
+    otel::setup_tracing,
 };
 use anyhow::{Context, Result};
-use opentelemetry::{trace::TracerProvider as _, KeyValue};
+use opentelemetry::KeyValue;
 use tracing::Level;
-use tracing_opentelemetry::MetricsLayer;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 /// Configuration for the OpenTelemetry tracing and logging system.
 ///
@@ -222,41 +220,29 @@ impl Logger {
     #[cfg(feature = "env")]
     pub fn from_env(prefix: Option<&str>) -> Result<Self> {
         let prefix = prefix.unwrap_or("LOG_");
-        let logger = envy::prefixed(prefix)
-            .from_env()
-            .context("Failed to deserialize environment configuration")?;
+        let logger = envy::prefixed(prefix).from_env().map_err(|e| {
+            anyhow::anyhow!("Failed to deserialize environment configuration: {}", e)
+        })?;
         Ok(logger)
     }
 
     /// Initialize tracing with this configuration
     pub fn init(self) -> Result<ProviderGuard> {
-        init_tracing(self)
+        init_tracing_from_logger(self)
     }
 }
 
-/// Initialize tracing and OpenTelemetry with the given configuration
-pub fn init_tracing(cfg: Logger) -> Result<ProviderGuard> {
-    // Build resource with service name and additional attributes
-    let resource = get_resource(&cfg.service_name, &cfg.attributes);
-    let tracer_provider = init_tracer_provider(&resource, cfg.sample_ratio)?;
-    let meter_provider = init_meter_provider(&resource, cfg.metrics_interval_secs)?;
-
-    // Set up env filter
-    let env_filter = init_env_filter(&cfg.level);
-    // Set up format layer
-    let fmt_layer = init_format_layer(cfg.format, cfg.ansi);
-    // Set up telemetry layer with tracer
-    let tracer = tracer_provider.tracer(cfg.service_name.clone());
-    let metrics_layer = MetricsLayer::new(meter_provider.clone());
-    let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-
-    tracing_subscriber::registry()
-        .with(fmt_layer)
-        .with(metrics_layer)
-        .with(otel_layer)
-        .with(env_filter)
-        .init();
-
+// Initialize tracing from logger
+pub fn init_tracing_from_logger(logger: Logger) -> Result<ProviderGuard> {
+    let (tracer_provider, meter_provider) = setup_tracing(
+        &logger.service_name,
+        &logger.attributes,
+        logger.sample_ratio,
+        logger.metrics_interval_secs,
+        logger.level,
+        init_format_layer(logger.format, logger.ansi),
+    )
+    .context("Failed to initialize tracing")?;
     Ok(ProviderGuard::new(
         Some(tracer_provider),
         Some(meter_provider),
@@ -266,7 +252,7 @@ pub fn init_tracing(cfg: Logger) -> Result<ProviderGuard> {
 /// Convenience function to initialize tracing with default settings
 pub fn init_logging(service_name: &str) -> Result<ProviderGuard> {
     let logger = Logger::new(service_name);
-    init_tracing(logger)
+    init_tracing_from_logger(logger)
 }
 
 #[cfg(feature = "env")]
@@ -281,7 +267,7 @@ pub fn init_logger_from_env(prefix: Option<&str>) -> Result<Logger> {
 #[cfg(feature = "env")]
 pub fn init_logging_from_env(prefix: Option<&str>) -> Result<ProviderGuard> {
     let logger = init_logger_from_env(prefix)?;
-    init_tracing(logger)
+    init_tracing_from_logger(logger)
 }
 
 #[cfg(test)]
