@@ -43,6 +43,7 @@ tracing-opentelemetry = { workspace = true }
 [features]
 # Base dependencies
 fields = ["dep:http"]
+macros = ["dep:tracing"]
 
 # Composite features
 http = [
@@ -65,7 +66,7 @@ otel = [
 
 # Feature combinations
 context = ["http"]
-span = ["context", "fields", "http"]
+span = ["context", "fields", "http", "macros"]
 trace = ["span"]
 logger = ["dep:tracing-subscriber", "otel"]
 env = ["dep:envy", "logger"]

@@ -6,7 +6,10 @@ use opentelemetry::trace::SpanKind;
 use std::net::SocketAddr;
 use tower_http::trace::MakeSpan;
 use tracing::{field::Empty, Level};
-use tracing_otel_extra::extract::{context, fields};
+use tracing_otel_extra::{
+    dyn_span,
+    extract::{context, fields},
+};
 
 /// An implementor of [`MakeSpan`] which creates `tracing` spans populated with information about
 /// the request received by an `axum` web server.
@@ -79,35 +82,25 @@ impl<B> MakeSpan<B> for AxumOtelSpanCreator {
             || http_method.to_string(),
             |route| format!("{} {}", http_method, route),
         );
-        macro_rules! make_span {
-            ($level:expr) => {
-                tracing::span!(
-                    $level,
-                    "request",
-                    http.client_ip = client_ip,
-                    http.versions = ?request.version(),
-                    http.host = ?fields::extract_host(request),
-                    http.method = ?fields::extract_http_method(request),
-                    http.route = http_route,
-                    http.scheme = ?fields::extract_http_scheme(request),
-                    http.status_code = Empty,
-                    http.target = request.uri().path_and_query().map(|p| p.as_str()),
-                    http.user_agent = ?fields::extract_user_agent(request),
-                    otel.name = span_name,
-                    otel.kind = ?SpanKind::Server,
-                    otel.status_code = Empty,
-                    request_id = %fields::extract_request_id(request),
-                    trace_id = Empty,
-                )
-            }
-        }
-        let span = match self.level {
-            Level::ERROR => make_span!(Level::ERROR),
-            Level::WARN => make_span!(Level::WARN),
-            Level::INFO => make_span!(Level::INFO),
-            Level::DEBUG => make_span!(Level::DEBUG),
-            Level::TRACE => make_span!(Level::TRACE),
-        };
+
+        let span = dyn_span!(
+            self.level,
+            "request",
+            http.client_ip = client_ip,
+            http.versions = ?request.version(),
+            http.host = ?fields::extract_host(request),
+            http.method = ?fields::extract_http_method(request),
+            http.route = http_route,
+            http.scheme = ?fields::extract_http_scheme(request),
+            http.status_code = Empty,
+            http.target = request.uri().path_and_query().map(|p| p.as_str()),
+            http.user_agent = ?fields::extract_user_agent(request),
+            otel.name = span_name,
+            otel.kind = ?SpanKind::Server,
+            otel.status_code = Empty,
+            request_id = %fields::extract_request_id(request),
+            trace_id = Empty
+        );
         context::set_otel_parent(request.headers(), &span);
         span
     }

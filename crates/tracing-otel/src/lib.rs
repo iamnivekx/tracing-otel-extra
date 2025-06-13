@@ -87,6 +87,10 @@ pub use log::{init_logging, LogFormat, Logger};
 #[cfg(feature = "env")]
 pub use log::{init_logger_from_env, init_logging_from_env};
 
+// Macros module exports
+#[cfg(feature = "macros")]
+pub mod macros;
+
 // Extra module exports
 pub mod extract {
 

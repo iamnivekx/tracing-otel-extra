@@ -57,8 +57,7 @@
 //! - [`AxumOtelOnFailure`] - Handles error cases and updates span status
 //!
 //! See the [examples](https://github.com/iamnivekx/axum-otel/tree/main/examples) directory for complete examples.
-
-mod event_macro;
+//!
 mod make_span;
 mod on_failure;
 mod on_response;

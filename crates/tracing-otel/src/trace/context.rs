@@ -1,4 +1,4 @@
-use super::http::extract_context_from_headers;
+use crate::extract::http::extract_context_from_headers;
 use opentelemetry::TraceId;
 
 /// The key for the trace id in the span attributes.

@@ -1,6 +1,6 @@
-use crate::event_dynamic_lvl;
 use tower_http::{classify::ServerErrorsFailureClass, trace::OnFailure};
 use tracing::Level;
+use tracing_otel_extra::dyn_event;
 
 /// An implementor of [`OnFailure`] which records the failure status code.
 ///
@@ -54,7 +54,7 @@ impl OnFailure<ServerErrorsFailureClass> for AxumOtelOnFailure {
         latency: std::time::Duration,
         span: &tracing::Span,
     ) {
-        event_dynamic_lvl!(
+        dyn_event!(
             self.level,
             classification = %failure_classification,
             latency = %latency.as_millis(),

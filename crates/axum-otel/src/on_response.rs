@@ -1,7 +1,7 @@
-use crate::event_dynamic_lvl;
 use axum::http;
 use tower_http::trace::OnResponse;
 use tracing::Level;
+use tracing_otel_extra::dyn_event;
 
 /// An implementor of [`OnResponse`] which records the response status code and latency.
 ///
@@ -68,7 +68,7 @@ impl<B> OnResponse<B> for AxumOtelOnResponse {
         span.record("http.status_code", tracing::field::display(status));
         span.record("otel.status_code", "OK");
 
-        event_dynamic_lvl!(
+        dyn_event!(
             self.level,
             latency = %latency.as_millis(),
             status = %status,
