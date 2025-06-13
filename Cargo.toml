@@ -23,6 +23,10 @@ keywords = ["http", "axum", "tracing", "logging"]
 categories = ["asynchronous", "web-programming"]
 
 [workspace.dependencies]
+tracing-otel-extra = { path = "crates/tracing-otel", features = [
+    "fields",
+    "context",
+], version = "0.30.7-alpha.1" }
 tokio = { version = "1.45.1", features = ["full"] }
 tracing = { version = "0.1" }
 axum = { version = "0.8" }

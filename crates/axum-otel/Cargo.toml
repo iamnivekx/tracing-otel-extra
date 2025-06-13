@@ -17,10 +17,7 @@ tower-http = { workspace = true }
 opentelemetry = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
-tracing-otel-extra = { path = "../tracing-otel", features = [
-	"fields",
-	"context",
-], version = "0.30.7-alpha.1" }
+tracing-otel-extra = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }
