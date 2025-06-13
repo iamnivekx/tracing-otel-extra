@@ -1,17 +1,45 @@
 /// A macro to emit tracing events with dynamic level.
 ///
-/// This macro is used to emit tracing event and span with dynamic level.
-/// https://github.com/tokio-rs/tracing/issues/2730
+/// This macro is used to emit tracing events with a runtime-determined log level.
+/// It solves the limitation where tracing::event! requires a constant level at compile time.
+///
+/// This implementation is based on the discussion in [tracing issue #2730](https://github.com/tokio-rs/tracing/issues/2730).
+///
+/// # Motivation
+///
+/// The standard `tracing::event!` macro requires the level to be a constant at compile time.
+/// This can be limiting when you need to determine the log level at runtime, for example:
+/// - Based on error severity
+/// - Based on configuration
+/// - Based on runtime conditions
 ///
 /// # Example
 ///
 /// ```rust
-/// use tracing_otel_extra::{dyn_event};
+/// use tracing_otel_extra::dyn_event;
 /// use tracing::Level;
-///
-/// let level = Level::INFO;
-/// dyn_event!(level, "request");
+/// let is_critical_error = true;
+/// // Determine level at runtime
+/// let level = if is_critical_error {
+///     Level::ERROR
+/// } else {
+///     Level::DEBUG
+/// };
+/// let request_id = "uuid";
+/// // Emit event with dynamic level
+/// dyn_event!(level, request_id = %request_id, "request");
 /// ```
+///
+/// # Comparison with log crate
+///
+/// The `log` crate allows dynamic levels by default, but `tracing` requires static metadata
+/// for performance reasons. This macro provides a similar experience to `log` while maintaining
+/// `tracing`'s performance benefits.
+///
+/// # Performance
+///
+/// The macro expands to a match statement on the level, which has minimal runtime overhead.
+/// The actual event emission is still handled by tracing's efficient filtering system.
 #[macro_export]
 macro_rules! dyn_event {
     ($lvl:expr, $($tt:tt)*) => {
@@ -25,6 +53,32 @@ macro_rules! dyn_event {
     };
 }
 
+/// A macro to create spans with dynamic level.
+///
+/// Similar to `dyn_event!`, this macro allows creating spans with a runtime-determined level.
+/// This implementation is based on the discussion in [tracing issue #2730](https://github.com/tokio-rs/tracing/issues/2730).
+///
+/// # Example
+///
+/// ```rust
+/// use tracing_otel_extra::dyn_span;
+/// use tracing::Level;
+/// let is_important_operation = true;
+/// let level = if is_important_operation {
+///     Level::INFO
+/// } else {
+///     Level::DEBUG
+/// };
+/// let op = "important operation";
+/// let span = dyn_span!(level, "processing", operation = %op);
+/// let _guard = span.enter();
+/// // ... do work ...
+/// ```
+///
+/// # Performance
+///
+/// Like `dyn_event!`, this macro expands to a match statement with minimal runtime overhead.
+/// The span creation is still handled by tracing's efficient filtering system.
 #[macro_export]
 macro_rules! dyn_span {
     ($lvl:expr, $($tt:tt)*) => {
@@ -58,6 +112,9 @@ mod tests {
     fn test_with_fields() {
         let level = Level::INFO;
         dyn_event!(level, field1 = "value1", field2 = 42, "message with fields");
+        let request_id = "uuid";
+        dyn_event!(level, request_id = %request_id, "processing request");
+        dyn_event!(level, request_id = %request_id);
     }
 
     #[test]
