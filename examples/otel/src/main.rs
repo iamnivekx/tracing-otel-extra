@@ -33,7 +33,8 @@ async fn health() -> &'static str {
 async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
     // Consider changing to anyhow::Result for broader error handling
-    let logger = Logger::from_env(Some("LOG_"))?;
+    let mut logger = Logger::from_env(Some("LOG_"))?;
+    logger = logger.with_ansi(true);
     logger.init()?;
 
     // Setup Axum router and server

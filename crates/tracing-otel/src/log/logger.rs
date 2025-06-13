@@ -104,15 +104,10 @@
 //! LOG_METRICS_INTERVAL_SECS=60
 //! LOG_ATTRIBUTES=environment=prod,region=us-west
 //! ```
-
-use crate::{
-    guard::ProviderGuard,
-    layer::{
-        deserialize_attributes, deserialize_level, deserialize_log_format, init_format_layer,
-        LogFormat,
-    },
-    otel::setup_tracing,
+use super::layer::{
+    deserialize_attributes, deserialize_level, deserialize_log_format, init_format_layer, LogFormat,
 };
+use crate::otel::{setup_tracing, ProviderGuard};
 use anyhow::{Context, Result};
 use opentelemetry::KeyValue;
 use tracing::Level;

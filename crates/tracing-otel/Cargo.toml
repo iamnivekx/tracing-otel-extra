@@ -18,20 +18,54 @@ anyhow = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
-opentelemetry = { workspace = true }
-opentelemetry_sdk = { workspace = true }
-opentelemetry-otlp = { workspace = true }
+http = { workspace = true, optional = true }
+
+opentelemetry = { workspace = true, optional = true }
+opentelemetry_sdk = { workspace = true, optional = true }
+opentelemetry-otlp = { workspace = true, optional = true }
 opentelemetry-http = { workspace = true, optional = true }
 
-tracing = { workspace = true }
-tracing-opentelemetry = { workspace = true }
-tracing-subscriber = { workspace = true, features = ["json"] }
+tracing = { workspace = true, optional = true }
+tracing-opentelemetry = { workspace = true, optional = true }
+tracing-subscriber = { workspace = true, features = ["json"], optional = true }
 
 envy = { workspace = true, optional = true }
 
 [dev-dependencies]
+opentelemetry-http = { workspace = true }
 tokio = { workspace = true }
+opentelemetry = { workspace = true }
+opentelemetry_sdk = { workspace = true }
+opentelemetry-otlp = { workspace = true }
+tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true }
 
 [features]
-http = ["dep:opentelemetry-http"]
-env = ["dep:envy"]
+# Base dependencies
+fields = ["dep:http"]
+
+# Composite features
+http = [
+	"dep:http",
+	"dep:tracing",
+	"dep:opentelemetry",
+	"dep:opentelemetry-http",
+	"dep:tracing-opentelemetry",
+	"fields",
+]
+
+# Core features
+otel = [
+	"dep:tracing",
+	"dep:opentelemetry",
+	"dep:opentelemetry_sdk",
+	"dep:opentelemetry-otlp",
+	"dep:tracing-opentelemetry",
+]
+
+# Feature combinations
+context = ["http"]
+span = ["context", "fields", "http"]
+trace = ["span"]
+logger = ["dep:tracing-subscriber", "otel"]
+env = ["dep:envy", "logger"]

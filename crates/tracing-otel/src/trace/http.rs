@@ -2,6 +2,11 @@ use opentelemetry::{global, Context};
 use opentelemetry_http::{HeaderExtractor, HeaderInjector, Request, Response};
 
 /// Extract the context from the incoming request headers
+pub fn extract_context_from_headers(headers: &http::HeaderMap) -> Context {
+    global::get_text_map_propagator(|propagator| propagator.extract(&HeaderExtractor(headers)))
+}
+
+/// Extract the context from the incoming request headers
 pub fn extract_context_from_request<T>(request: &Request<T>) -> Context {
     global::get_text_map_propagator(|propagator| {
         propagator.extract(&HeaderExtractor(request.headers()))
@@ -23,8 +28,10 @@ pub fn inject_context_into_response<T>(context: &Context, response: &mut Respons
 }
 
 #[cfg(test)]
+#[cfg(feature = "http")]
 mod tests {
     use super::*;
+    use opentelemetry::global;
     use opentelemetry::trace::{
         SpanContext, SpanId, TraceContextExt, TraceFlags, TraceId, TraceState,
     };

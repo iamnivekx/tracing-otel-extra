@@ -15,9 +15,9 @@ keywords = ["axum", "tracing", "opentelemetry", "logging"]
 axum = { workspace = true }
 tower-http = { workspace = true }
 opentelemetry = { workspace = true }
-opentelemetry-http = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
+tracing-otel-extra = { workspace = true, features = ["fields", "context"] }
 
 [dev-dependencies]
 tokio = { workspace = true }

@@ -34,7 +34,7 @@ checksum = "e16d2d3311acee920a9eb8d33b8cbc1787ce4a264e85f964c2404b969bdcd487"
 
 [[package]]
 name = "articles-service"
-version = "0.30.6"
+version = "0.30.7-alpha.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -133,23 +133,23 @@ dependencies = [
 
 [[package]]
 name = "axum-otel"
-version = "0.30.6"
+version = "0.30.7-alpha.1"
 dependencies = [
  "axum",
  "opentelemetry 0.30.0",
- "opentelemetry-http",
  "opentelemetry-otlp",
  "opentelemetry_sdk 0.30.0",
  "tokio",
  "tower-http",
  "tracing",
  "tracing-opentelemetry 0.31.0",
+ "tracing-otel-extra",
  "tracing-subscriber",
 ]
 
 [[package]]
 name = "axum-otel-demo"
-version = "0.30.6"
+version = "0.30.7-alpha.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -2052,10 +2052,11 @@ dependencies = [
 
 [[package]]
 name = "tracing-otel-extra"
-version = "0.30.6"
+version = "0.30.7-alpha.1"
 dependencies = [
  "anyhow",
  "envy",
+ "http",
  "opentelemetry 0.30.0",
  "opentelemetry-http",
  "opentelemetry-otlp",
@@ -2130,7 +2131,7 @@ dependencies = [
 
 [[package]]
 name = "users-service"
-version = "0.30.6"
+version = "0.30.7-alpha.1"
 dependencies = [
  "anyhow",
  "axum",

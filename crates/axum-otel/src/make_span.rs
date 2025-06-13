@@ -1,4 +1,3 @@
-use crate::{get_request_id, set_otel_parent};
 use axum::{
     extract::{ConnectInfo, MatchedPath},
     http,
@@ -6,10 +5,8 @@ use axum::{
 use opentelemetry::trace::SpanKind;
 use std::net::SocketAddr;
 use tower_http::trace::MakeSpan;
-use tracing::{
-    field::{debug, Empty},
-    Level,
-};
+use tracing::{field::Empty, Level};
+use tracing_otel_extra::extract::{context, fields};
 
 /// An implementor of [`MakeSpan`] which creates `tracing` spans populated with information about
 /// the request received by an `axum` web server.
@@ -73,20 +70,10 @@ impl<B> MakeSpan<B> for AxumOtelSpanCreator {
             .get::<MatchedPath>()
             .map(|p| p.as_str());
 
-        let user_agent = request
-            .headers()
-            .get(http::header::USER_AGENT)
-            .and_then(|header| header.to_str().ok());
-
-        let host = request
-            .headers()
-            .get(http::header::HOST)
-            .and_then(|header| header.to_str().ok());
-
         let client_ip = request
             .extensions()
             .get::<ConnectInfo<SocketAddr>>()
-            .map(|ConnectInfo(ip)| debug(ip));
+            .map(|ConnectInfo(ip)| tracing::field::debug(ip));
 
         let span_name = http_route.as_ref().map_or_else(
             || http_method.to_string(),
@@ -99,17 +86,17 @@ impl<B> MakeSpan<B> for AxumOtelSpanCreator {
                     "request",
                     http.client_ip = client_ip,
                     http.versions = ?request.version(),
-                    http.host = host,
-                    http.method = ?request.method(),
+                    http.host = ?fields::extract_host(request),
+                    http.method = ?fields::extract_http_method(request),
                     http.route = http_route,
-                    http.scheme = request.uri().scheme().map(debug),
+                    http.scheme = ?fields::extract_http_scheme(request),
                     http.status_code = Empty,
                     http.target = request.uri().path_and_query().map(|p| p.as_str()),
-                    http.user_agent = user_agent,
+                    http.user_agent = ?fields::extract_user_agent(request),
                     otel.name = span_name,
                     otel.kind = ?SpanKind::Server,
                     otel.status_code = Empty,
-                    request_id = %get_request_id(request.headers()),
+                    request_id = %fields::extract_request_id(request),
                     trace_id = Empty,
                 )
             }
@@ -121,7 +108,7 @@ impl<B> MakeSpan<B> for AxumOtelSpanCreator {
             Level::DEBUG => make_span!(Level::DEBUG),
             Level::TRACE => make_span!(Level::TRACE),
         };
-        set_otel_parent(request.headers(), &span);
+        context::set_otel_parent(request.headers(), &span);
         span
     }
 }

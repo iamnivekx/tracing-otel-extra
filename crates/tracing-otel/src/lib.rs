@@ -1,7 +1,18 @@
 //! # Tracing Extra
 //!
-//! This crate provides common utilities for initializing tracing and OpenTelemetry
-//! in axum applications.
+//! This crate provides common utilities for initializing tracing and OpenTelemetry.
+//!
+//! ## Features
+//!
+//! The crate is organized into several feature flags:
+//!
+//! - `otel`: OpenTelemetry integration for distributed tracing
+//! - `logger`: Basic logging functionality with configurable formats
+//! - `env`: Environment-based logging configuration
+//! - `context`: Trace context utilities
+//! - `fields`: Common tracing fields and attributes
+//! - `http`: HTTP request/response tracing
+//! - `span`: Span creation and management utilities
 //!
 //! ## Examples
 //!
@@ -29,31 +40,68 @@
 //! }
 //! ```
 //!
-//! Legacy usage (for backward compatibility):
+//! Using environment-based configuration:
 //! ```rust,no_run
-//! use tracing_otel_extra::init_logging;
+//! use tracing_otel_extra::init_logging_from_env;
 //!
 //! #[tokio::main]
 //! async fn main() {
-//!     let _guard = init_logging("my-service").expect("Failed to initialize tracing");
+//!     // Configure through environment variables:
+//!     // LOG_SERVICE_NAME=my-service
+//!     // LOG_FORMAT=json
+//!     // LOG_SAMPLE_RATIO=0.1
+//!     let _guard = init_logging_from_env(None)
+//!         .expect("Failed to initialize tracing from environment");
 //!     
 //!     // Your application code here
 //! }
 //! ```
-pub mod guard;
-#[cfg(feature = "http")]
-pub mod http;
-pub mod layer;
-pub mod logger;
+//!
+
+// Trace modules
+#[cfg(any(
+    feature = "context",
+    feature = "fields",
+    feature = "http",
+    feature = "span",
+))]
+pub mod trace;
+
+// OpenTelemetry integration
+#[cfg(feature = "otel")]
 pub mod otel;
 
-// Re-export the main types for convenience
-pub use guard::ProviderGuard;
+// Logging functionality
+#[cfg(any(feature = "logger", feature = "env"))]
+pub mod log;
 
-pub use layer::LogFormat;
-pub use logger::{init_logging, Logger};
+// Re-exports
+#[cfg(feature = "otel")]
+pub use otel::*;
 
-#[cfg(feature = "http")]
-pub use http::{
-    extract_context_from_request, inject_context_into_request, inject_context_into_response,
-};
+// Logger module exports
+#[cfg(feature = "logger")]
+pub use log::{init_logging, LogFormat, Logger};
+
+// Logger module exports
+#[cfg(feature = "env")]
+pub use log::{init_logger_from_env, init_logging_from_env};
+
+// Extra module exports
+pub mod extract {
+
+    #[cfg(feature = "context")]
+    pub use crate::trace::context;
+
+    // Fields module exports
+    #[cfg(feature = "fields")]
+    pub use crate::trace::fields;
+
+    // Http module exports
+    #[cfg(feature = "http")]
+    pub use crate::trace::http;
+
+    // Span module exports
+    #[cfg(feature = "span")]
+    pub use crate::trace::span;
+}

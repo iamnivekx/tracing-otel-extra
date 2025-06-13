@@ -1,15 +1,15 @@
-use axum::http::HeaderMap;
-use opentelemetry::trace::TraceContextExt as _;
-use opentelemetry::{Context, TraceId};
-use tracing::{error, info, Span};
-use tracing_opentelemetry::OpenTelemetrySpanExt as _;
+use super::http::extract_context_from_headers;
+use opentelemetry::TraceId;
+
+/// The key for the trace id in the span attributes.
+pub const TRACE_ID: &str = "trace_id";
 
 /// Returns the `trace_id` of the current span according to the global tracing subscriber.
 ///
 /// # Example
 ///
 /// ```rust
-/// use axum_otel::current_trace_id;
+/// use tracing_otel_extra::extract::context::current_trace_id;
 /// use tracing::info_span;
 /// use opentelemetry::trace::TraceContextExt as _;
 /// use tracing_opentelemetry::OpenTelemetrySpanExt as _;
@@ -21,6 +21,8 @@ use tracing_opentelemetry::OpenTelemetrySpanExt as _;
 /// assert_eq!(trace_id, span.context().span().span_context().trace_id());
 /// ```
 pub fn current_trace_id() -> TraceId {
+    use opentelemetry::trace::TraceContextExt as _;
+    use tracing_opentelemetry::OpenTelemetrySpanExt as _;
     tracing::Span::current()
         .context()
         .span()
@@ -57,18 +59,19 @@ pub fn current_trace_id() -> TraceId {
 /// # Example
 ///
 /// ```rust
-/// use axum::http::HeaderMap;
+/// use http::HeaderMap;
 /// use tracing::Span;
-/// use axum_otel::set_otel_parent;
+/// use tracing_otel_extra::extract::context::set_otel_parent;
 ///
 /// let headers = HeaderMap::new();
 /// let span = Span::current();
 /// set_otel_parent(&headers, &span);
 /// ```
-pub fn set_otel_parent(headers: &HeaderMap, span: &tracing::Span) {
-    let remote_context = opentelemetry::global::get_text_map_propagator(|propagator| {
-        propagator.extract(&opentelemetry_http::HeaderExtractor(headers))
-    });
+pub fn set_otel_parent(headers: &http::HeaderMap, span: &tracing::Span) {
+    use opentelemetry::trace::TraceContextExt as _;
+    use tracing_opentelemetry::OpenTelemetrySpanExt as _;
+
+    let remote_context = extract_context_from_headers(headers);
 
     // If we have a remote parent span, this will be the parent's trace identifier.
     // If not, it will be the newly generated trace identifier with this request as root span.
@@ -80,20 +83,19 @@ pub fn set_otel_parent(headers: &HeaderMap, span: &tracing::Span) {
         span.context().span().span_context().trace_id().to_string()
     };
     span.set_parent(remote_context);
-    span.record("trace_id", tracing::field::display(trace_id));
+    span.record(TRACE_ID, tracing::field::display(trace_id));
 }
 
 #[cfg(test)]
+#[cfg(feature = "context")]
 mod tests {
     use super::*;
     use opentelemetry::trace::TraceContextExt as _;
     use opentelemetry::trace::TracerProvider as _;
     use opentelemetry::{global, KeyValue};
     use opentelemetry_sdk::propagation::TraceContextPropagator;
-    use opentelemetry_sdk::trace::Config;
-    use opentelemetry_sdk::trace::Sampler;
     use opentelemetry_sdk::Resource;
-    use tracing::{field, Level, Span};
+    use tracing::{Level, Span};
     use tracing_opentelemetry::OpenTelemetrySpanExt as _;
     use tracing_subscriber::layer::SubscriberExt;
     use tracing_subscriber::util::SubscriberInitExt;
@@ -132,7 +134,7 @@ mod tests {
     #[tokio::test]
     async fn test_set_otel_parent_without_headers() {
         init_tracing();
-        let headers = HeaderMap::new();
+        let headers = http::HeaderMap::new();
         let span = create_span();
         set_otel_parent(&headers, &span);
 
@@ -148,7 +150,7 @@ mod tests {
     #[tokio::test]
     async fn test_set_otel_parent_with_invalid_traceparent() {
         init_tracing();
-        let mut headers = HeaderMap::new();
+        let mut headers = http::HeaderMap::new();
         headers.insert("traceparent", "invalid".parse().unwrap());
 
         let span = create_span();
@@ -166,7 +168,7 @@ mod tests {
     #[tokio::test]
     async fn test_set_otel_parent_with_valid_traceparent() {
         init_tracing();
-        let mut headers = HeaderMap::new();
+        let mut headers = http::HeaderMap::new();
         let expected_trace_id = "4bf92f3577b34da6a3ce929d0e0e4736";
         let traceparent = format!("00-{}-00f067aa0ba902b7-01", expected_trace_id);
         println!("Setting traceparent header: {}", traceparent);
