@@ -20,7 +20,7 @@ tracing-opentelemetry = { workspace = true }
 tracing-otel-extra = { path = "../tracing-otel", features = [
 	"fields",
 	"context",
-] }
+], version = "0.30.7-alpha.1" }
 
 [dev-dependencies]
 tokio = { workspace = true }
