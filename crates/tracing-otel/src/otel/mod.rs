@@ -1,5 +1,5 @@
-pub mod guard;
-pub mod opentelemetry;
+mod guard;
+mod opentelemetry;
 
 // Re-exports for convenience
 pub use guard::*;

@@ -3,46 +3,10 @@
 //! This module provides utilities for initializing and configuring OpenTelemetry
 //! tracing and metrics in your application. It includes functions for:
 //!
-//! - Setting up tracer and meter providers
 //! - Configuring resource attributes
-//! - Initializing environment filters
-//! - Setting up the complete tracing stack
-//!
-//! # Examples
-//!
-//! ```rust
-//! use tracing_otel_extra::otel::{setup_tracing, get_resource};
-//! use opentelemetry::KeyValue;
-//! use tracing::Level;
-//!
-//! #[tokio::main]
-//! async fn main() -> anyhow::Result<()> {
-//!     let service_name = "my-service";
-//!     let attributes = vec![
-//!         KeyValue::new("environment", "production"),
-//!         KeyValue::new("version", "1.0.0"),
-//!     ];
-//!
-//!     let (tracer_provider, meter_provider) = setup_tracing(
-//!         service_name,
-//!         &attributes,
-//!         1.0,  // sample ratio
-//!         30,   // metrics interval in seconds
-//!         Level::INFO,
-//!         tracing_subscriber::fmt::layer(),
-//!     )?;
-//!
-//!     // Your application code here...
-//!
-//!     // Cleanup when done
-//!     tracer_provider.shutdown()?;
-//!     meter_provider.shutdown()?;
-//!     Ok(())
-//! }
-//! ```
+//! - Initializing tracer and meter providers
 
 use anyhow::{Context, Result};
-use opentelemetry::trace::TracerProvider as _;
 use opentelemetry::{global, KeyValue};
 use opentelemetry_sdk::{
     metrics::{MeterProviderBuilder, PeriodicReader, SdkMeterProvider},
@@ -50,9 +14,6 @@ use opentelemetry_sdk::{
     trace::{RandomIdGenerator, Sampler, SdkTracerProvider},
     Resource,
 };
-use tracing::Level;
-use tracing_opentelemetry::MetricsLayer;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 /// Creates a resource with the given service name and attributes.
 ///
@@ -187,107 +148,4 @@ pub fn init_meter_provider(
     global::set_meter_provider(meter_provider.clone());
 
     Ok(meter_provider)
-}
-
-/// Creates an environment filter for tracing based on the given level.
-///
-/// This function attempts to create a filter from environment variables first,
-/// falling back to the provided level if no environment configuration is found.
-///
-/// # Arguments
-///
-/// * `level` - The default tracing level to use if no environment configuration is found
-///
-/// # Examples
-///
-/// ```rust
-/// use tracing_otel_extra::otel::init_env_filter;
-/// use tracing::Level;
-///
-/// let filter = init_env_filter(&Level::INFO);
-/// ```
-pub fn init_env_filter(level: &Level) -> EnvFilter {
-    EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(level.to_string()))
-}
-
-/// Initializes the complete tracing stack with OpenTelemetry integration.
-///
-/// This function sets up the entire tracing infrastructure, including:
-/// - OpenTelemetry tracing
-/// - Metrics collection
-/// - Log formatting
-/// - Environment filtering
-///
-/// # Arguments
-///
-/// * `service_name` - The name of your service
-/// * `attributes` - Additional key-value pairs to include in the resource
-/// * `sample_ratio` - The ratio of traces to sample (0.0 to 1.0)
-/// * `metrics_interval_secs` - The interval in seconds between metric collections
-/// * `level` - The default tracing level
-/// * `fmt_layer` - A formatting layer for the tracing output
-///
-/// # Returns
-///
-/// Returns a `Result` containing the configured `SdkTracerProvider` and `SdkMeterProvider`,
-/// or an error if initialization fails.
-///
-/// # Examples
-///
-/// ```rust
-/// use tracing_otel_extra::otel::setup_tracing;
-/// use opentelemetry::KeyValue;
-/// use tracing::Level;
-///
-/// #[tokio::main]
-/// async fn main() -> anyhow::Result<()> {
-///     let (tracer_provider, meter_provider) = setup_tracing(
-///         "my-service",
-///         &[KeyValue::new("environment", "production")],
-///         1.0,
-///         30,
-///         Level::INFO,
-///         tracing_subscriber::fmt::layer(),
-///     )?;
-///
-///     // Your application code here...
-///
-///     // Cleanup when done
-///     tracer_provider.shutdown()?;
-///     meter_provider.shutdown()?;
-///     Ok(())
-/// }
-/// ```
-pub fn setup_tracing<S>(
-    service_name: &str,
-    attributes: &[KeyValue],
-    sample_ratio: f64,
-    metrics_interval_secs: u64,
-    level: Level,
-    fmt_layer: S,
-) -> Result<(SdkTracerProvider, SdkMeterProvider)>
-where
-    S: tracing_subscriber::Layer<Registry> + Send + Sync + 'static,
-{
-    // Build resource with service name and additional attributes
-    let resource = get_resource(service_name, attributes);
-    let tracer_provider = init_tracer_provider(&resource, sample_ratio)?;
-    let meter_provider = init_meter_provider(&resource, metrics_interval_secs)?;
-
-    // Set up env filter
-    let env_filter = init_env_filter(&level);
-
-    // Set up telemetry layer with tracer
-    let tracer = tracer_provider.tracer(service_name.to_string());
-    let metrics_layer = MetricsLayer::new(meter_provider.clone());
-    let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-
-    tracing_subscriber::registry()
-        .with(fmt_layer)
-        .with(metrics_layer)
-        .with(otel_layer)
-        .with(env_filter)
-        .init();
-
-    Ok((tracer_provider, meter_provider))
 }

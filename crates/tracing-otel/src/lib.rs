@@ -73,7 +73,7 @@ pub mod otel;
 
 // Logging functionality
 #[cfg(any(feature = "logger", feature = "env"))]
-pub mod log;
+pub mod logs;
 
 // Re-exports
 #[cfg(feature = "otel")]
@@ -81,11 +81,11 @@ pub use otel::*;
 
 // Logger module exports
 #[cfg(feature = "logger")]
-pub use log::{init_logging, LogFormat, Logger};
+pub use logs::{init_logging, FmtSpan, LogFormat, Logger};
 
 // Logger module exports
 #[cfg(feature = "env")]
-pub use log::{init_logger_from_env, init_logging_from_env};
+pub use logs::{init_logger_from_env, init_logging_from_env};
 
 // Macros module exports
 #[cfg(feature = "macros")]

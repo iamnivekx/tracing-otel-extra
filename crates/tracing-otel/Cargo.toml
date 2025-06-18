@@ -20,11 +20,13 @@ serde_json = { workspace = true }
 
 http = { workspace = true, optional = true }
 
+# opentelemetry
 opentelemetry = { workspace = true, optional = true }
 opentelemetry_sdk = { workspace = true, optional = true }
 opentelemetry-otlp = { workspace = true, optional = true }
 opentelemetry-http = { workspace = true, optional = true }
 
+# tracing and tracing-opentelemetry
 tracing = { workspace = true, optional = true }
 tracing-opentelemetry = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true, features = ["json"], optional = true }
@@ -61,12 +63,11 @@ otel = [
 	"dep:opentelemetry",
 	"dep:opentelemetry_sdk",
 	"dep:opentelemetry-otlp",
-	"dep:tracing-opentelemetry",
 ]
 
 # Feature combinations
 context = ["http"]
 span = ["context", "fields", "http", "macros"]
 trace = ["span"]
-logger = ["dep:tracing-subscriber", "otel"]
+logger = ["dep:tracing-subscriber", "dep:tracing-opentelemetry", "otel"]
 env = ["dep:envy", "logger"]

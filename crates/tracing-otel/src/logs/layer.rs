@@ -98,10 +98,14 @@ pub fn configure_log_format(
 }
 
 // Initialize format layer
-pub fn init_format_layer(format: LogFormat, ansi: bool) -> Box<dyn Layer<Registry> + Sync + Send> {
+pub fn init_format_layer(
+    format: LogFormat,
+    ansi: bool,
+    span_events: FmtSpan,
+) -> Box<dyn Layer<Registry> + Sync + Send> {
     let layer = fmt::Layer::default()
         .with_ansi(ansi)
-        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE);
+        .with_span_events(span_events);
 
     configure_log_format(layer, format)
 }
