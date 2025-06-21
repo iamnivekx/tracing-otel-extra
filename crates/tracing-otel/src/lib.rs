@@ -69,7 +69,9 @@ pub mod trace;
 
 // OpenTelemetry integration
 #[cfg(feature = "otel")]
-pub mod otel;
+pub mod otel {
+    pub use tracing_opentelemetry_extra::*;
+}
 
 // Logging functionality
 #[cfg(any(feature = "logger", feature = "env"))]

@@ -7,41 +7,13 @@
 //! - Initializing tracer and meter providers
 
 use anyhow::{Context, Result};
-use opentelemetry::{global, KeyValue};
+use opentelemetry::global;
 use opentelemetry_sdk::{
     metrics::{MeterProviderBuilder, PeriodicReader, SdkMeterProvider},
     propagation::TraceContextPropagator,
     trace::{RandomIdGenerator, Sampler, SdkTracerProvider},
     Resource,
 };
-
-/// Creates a resource with the given service name and attributes.
-///
-/// This function builds an OpenTelemetry resource that identifies your service
-/// and includes any additional attributes you want to track.
-///
-/// # Arguments
-///
-/// * `service_name` - The name of your service
-/// * `attributes` - Additional key-value pairs to include in the resource
-///
-/// # Examples
-///
-/// ```rust
-/// use tracing_otel_extra::otel::get_resource;
-/// use opentelemetry::KeyValue;
-///
-/// let resource = get_resource(
-///     "my-service",
-///     &[KeyValue::new("environment", "production")],
-/// );
-/// ```
-pub fn get_resource(service_name: &str, attributes: &[KeyValue]) -> Resource {
-    Resource::builder()
-        .with_service_name(service_name.to_string())
-        .with_attributes(attributes.to_vec())
-        .build()
-}
 
 /// Initializes a tracer provider for OpenTelemetry tracing.
 ///
@@ -64,7 +36,7 @@ pub fn get_resource(service_name: &str, attributes: &[KeyValue]) -> Resource {
 /// # Examples
 ///
 /// ```rust
-/// use tracing_otel_extra::otel::{get_resource, init_tracer_provider};
+/// use tracing_opentelemetry_extra::{get_resource, init_tracer_provider};
 /// use opentelemetry::KeyValue;
 ///
 /// #[tokio::main]
@@ -116,7 +88,7 @@ pub fn init_tracer_provider(resource: &Resource, sample_ratio: f64) -> Result<Sd
 /// # Examples
 ///
 /// ```rust
-/// use tracing_otel_extra::otel::{get_resource, init_meter_provider};
+/// use tracing_opentelemetry_extra::otel::{get_resource, init_meter_provider};
 /// use opentelemetry::KeyValue;
 ///
 /// #[tokio::main]

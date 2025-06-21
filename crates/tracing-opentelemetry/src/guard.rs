@@ -3,12 +3,12 @@ use opentelemetry_sdk::{metrics::SdkMeterProvider, trace::SdkTracerProvider};
 
 /// A guard that holds the tracer provider and ensures proper cleanup
 #[derive(Debug, Clone)]
-pub struct ProviderGuard {
+pub struct OtelGuard {
     tracer_provider: Option<SdkTracerProvider>,
     meter_provider: Option<SdkMeterProvider>,
 }
 
-impl ProviderGuard {
+impl OtelGuard {
     /// Create a new guard with the given provider
     pub fn new(
         tracer_provider: Option<SdkTracerProvider>,
@@ -45,7 +45,7 @@ impl ProviderGuard {
 }
 
 // Drop the guard and shutdown the providers
-impl Drop for ProviderGuard {
+impl Drop for OtelGuard {
     fn drop(&mut self) {
         if let Some(tracer_provider) = self.tracer_provider.take() {
             if let Err(err) = tracer_provider.shutdown() {

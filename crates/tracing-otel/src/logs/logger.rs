@@ -112,7 +112,7 @@ use super::{
     },
     subscriber::setup_tracing,
 };
-use crate::otel::ProviderGuard;
+use crate::otel::OtelGuard;
 use anyhow::{Context, Result};
 use opentelemetry::KeyValue;
 use serde::Deserialize;
@@ -394,7 +394,7 @@ impl Logger {
     /// - Failed to initialize the tracing subscriber
     /// - Failed to set up OpenTelemetry providers
     /// - Failed to configure the environment filter
-    pub fn init(self) -> Result<ProviderGuard> {
+    pub fn init(self) -> Result<OtelGuard> {
         init_tracing_from_logger(self)
     }
 
@@ -427,8 +427,8 @@ impl Logger {
 }
 
 // Initialize tracing from logger
-pub fn init_tracing_from_logger(logger: Logger) -> Result<ProviderGuard> {
-    let (tracer_provider, meter_provider) = setup_tracing(
+pub fn init_tracing_from_logger(logger: Logger) -> Result<OtelGuard> {
+    let guard = setup_tracing(
         &logger.service_name,
         &logger.attributes,
         logger.sample_ratio,
@@ -437,14 +437,11 @@ pub fn init_tracing_from_logger(logger: Logger) -> Result<ProviderGuard> {
         init_format_layer(logger.format, logger.ansi, logger.span_events),
     )
     .context("Failed to initialize tracing")?;
-    Ok(ProviderGuard::new(
-        Some(tracer_provider),
-        Some(meter_provider),
-    ))
+    Ok(guard)
 }
 
 /// Convenience function to initialize tracing with default settings
-pub fn init_logging(service_name: &str) -> Result<ProviderGuard> {
+pub fn init_logging(service_name: &str) -> Result<OtelGuard> {
     let logger = Logger::new(service_name);
     init_tracing_from_logger(logger)
 }
@@ -459,7 +456,7 @@ pub fn init_logger_from_env(prefix: Option<&str>) -> Result<Logger> {
 }
 
 #[cfg(feature = "env")]
-pub fn init_logging_from_env(prefix: Option<&str>) -> Result<ProviderGuard> {
+pub fn init_logging_from_env(prefix: Option<&str>) -> Result<OtelGuard> {
     let logger = init_logger_from_env(prefix)?;
     init_tracing_from_logger(logger)
 }

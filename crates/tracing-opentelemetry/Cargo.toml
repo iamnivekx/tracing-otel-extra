@@ -1,0 +1,33 @@
+[package]
+name = "tracing-opentelemetry-extra"
+rust-version.workspace = true
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+categories.workspace = true
+description = "Bootstrap utilities for tracing and OpenTelemetry integration."
+documentation = "https://docs.rs/tracing-otel-extra"
+homepage = "https://github.com/iamnivekx/tracing-otel-extra/tree/main/crates/tracing-opentelemetry"
+repository = "https://github.com/iamnivekx/tracing-otel-extra/tree/main/crates/tracing-opentelemetry"
+readme = "README.md"
+keywords = ["tracing", "opentelemetry"]
+
+[dependencies]
+anyhow = { workspace = true }
+
+opentelemetry = { workspace = true }
+opentelemetry_sdk = { workspace = true }
+opentelemetry-otlp = { workspace = true }
+
+tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true }
+
+tracing-subscriber = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+
+[features]
+default = ["subscriber"]
+subscriber = ["dep:tracing-subscriber"]

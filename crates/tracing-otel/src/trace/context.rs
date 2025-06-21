@@ -1,5 +1,5 @@
 use crate::extract::http::extract_context_from_headers;
-use opentelemetry::TraceId;
+use opentelemetry::{SpanId, TraceId};
 
 /// The key for the trace id in the span attributes.
 pub const TRACE_ID: &str = "trace_id";
@@ -28,6 +28,29 @@ pub fn current_trace_id() -> TraceId {
         .span()
         .span_context()
         .trace_id()
+}
+
+/// Returns the `span_id` of the current span according to the global tracing subscriber.
+///
+/// # Example
+///
+/// ```rust
+/// use tracing_otel_extra::extract::context::current_span_id;
+/// use tracing::info_span;
+/// use opentelemetry::trace::TraceContextExt as _;
+/// use tracing_opentelemetry::OpenTelemetrySpanExt as _;
+///
+/// let span = info_span!("test span");
+/// let _entered = span.enter();
+/// let span_id = current_span_id();
+pub fn current_span_id() -> SpanId {
+    use opentelemetry::trace::TraceContextExt as _;
+    use tracing_opentelemetry::OpenTelemetrySpanExt as _;
+    tracing::Span::current()
+        .context()
+        .span()
+        .span_context()
+        .span_id()
 }
 
 /// Set the parent span for the current span and record the trace id.

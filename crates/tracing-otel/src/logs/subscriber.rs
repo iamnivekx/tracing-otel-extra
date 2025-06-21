@@ -1,9 +1,10 @@
-use crate::otel::{get_resource, init_meter_provider, init_tracer_provider};
+use crate::otel::{
+    get_resource, init_meter_provider, init_tracer_provider, init_tracing_subscriber,
+    opentelemetry::KeyValue, OtelGuard,
+};
 use anyhow::Result;
-use opentelemetry::KeyValue;
-use opentelemetry_sdk::{metrics::SdkMeterProvider, trace::SdkTracerProvider};
 use tracing::Level;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
+use tracing_subscriber::{EnvFilter, Layer, Registry};
 
 /// Creates an environment filter for tracing based on the given level.
 ///
@@ -57,7 +58,7 @@ pub fn init_env_filter(level: &Level) -> EnvFilter {
 ///
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
-///     let (tracer_provider, meter_provider) = setup_tracing(
+///     let guard = setup_tracing(
 ///         "my-service",
 ///         &[KeyValue::new("environment", "production")],
 ///         1.0,
@@ -69,8 +70,7 @@ pub fn init_env_filter(level: &Level) -> EnvFilter {
 ///     // Your application code here...
 ///
 ///     // Cleanup when done
-///     tracer_provider.shutdown()?;
-///     meter_provider.shutdown()?;
+///     guard.shutdown()?;
 ///     Ok(())
 /// }
 /// ```
@@ -81,32 +81,23 @@ pub fn setup_tracing<S>(
     metrics_interval_secs: u64,
     level: Level,
     fmt_layer: S,
-) -> Result<(SdkTracerProvider, SdkMeterProvider)>
+) -> Result<OtelGuard>
 where
     S: tracing_subscriber::Layer<Registry> + Send + Sync + 'static,
 {
-    use opentelemetry::trace::TracerProvider as _;
-
-    // Build resource with service name and additional attributes
+    let env_filter = init_env_filter(&level);
     let resource = get_resource(service_name, attributes);
     let tracer_provider = init_tracer_provider(&resource, sample_ratio)?;
     let meter_provider = init_meter_provider(&resource, metrics_interval_secs)?;
-    // let logger_provider = init_logger_provider(&resource)?;
+    let layers: Vec<Box<dyn Layer<Registry> + Sync + Send>> = vec![Box::new(fmt_layer)];
 
-    // Set up env filter
-    let env_filter = init_env_filter(&level);
+    let guard = init_tracing_subscriber(
+        service_name,
+        env_filter,
+        layers,
+        tracer_provider,
+        meter_provider,
+    )?;
 
-    // Set up telemetry layer with tracer
-    let tracer = tracer_provider.tracer(service_name.to_string());
-    let metrics_layer = tracing_opentelemetry::MetricsLayer::new(meter_provider.clone());
-    let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-
-    tracing_subscriber::registry()
-        .with(fmt_layer)
-        .with(metrics_layer)
-        .with(otel_layer)
-        .with(env_filter)
-        .init();
-
-    Ok((tracer_provider, meter_provider))
+    Ok(guard)
 }
