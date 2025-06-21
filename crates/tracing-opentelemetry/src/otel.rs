@@ -88,7 +88,7 @@ pub fn init_tracer_provider(resource: &Resource, sample_ratio: f64) -> Result<Sd
 /// # Examples
 ///
 /// ```rust
-/// use tracing_opentelemetry_extra::otel::{get_resource, init_meter_provider};
+/// use tracing_opentelemetry_extra::{get_resource, init_meter_provider};
 /// use opentelemetry::KeyValue;
 ///
 /// #[tokio::main]

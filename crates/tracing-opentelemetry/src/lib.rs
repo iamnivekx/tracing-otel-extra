@@ -19,7 +19,8 @@
 //! Basic usage with manual setup:
 //! ```rust,no_run
 //! use opentelemetry::KeyValue;
-//! use tracing_opentelemetry_extra::{get_resource, init_tracer_provider, init_meter_provider, OtelGuard};
+//! use tracing_opentelemetry_extra::{get_resource, init_tracer_provider, init_env_filter, init_tracing_subscriber, init_meter_provider};
+//! use tracing::Level;
 //!
 //! #[tokio::main]
 //! async fn main() -> anyhow::Result<()> {
@@ -36,9 +37,14 @@
 //!     let tracer_provider = init_tracer_provider(&resource, 1.0)?;
 //!     let meter_provider = init_meter_provider(&resource, 30)?;
 //!
-//!     // Create guard for automatic cleanup
-//!     let _guard = OtelGuard::new(Some(tracer_provider), Some(meter_provider));
-//!
+//!     // initialize tracing subscriber with otel layers
+//!     let _guard = init_tracing_subscriber(
+//!         "my-service",
+//!         init_env_filter(&Level::INFO),
+//!         vec![Box::new(tracing_subscriber::fmt::layer())],
+//!         tracer_provider,
+//!         meter_provider,
+//!     )?;
 //!     // Your application code here...
 //!
 //!     // Cleanup is handled automatically when the guard is dropped

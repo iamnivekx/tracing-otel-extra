@@ -44,6 +44,8 @@ async fn main() -> anyhow::Result<()> {
     let tracer_provider = init_tracer_provider(&resource, 1.0)?;
     let meter_provider = init_meter_provider(&resource, 30)?;
 
+    // initialize tracing subscriber with otel layers
+
     // Create guard for automatic cleanup
     let _guard = OtelGuard::new(Some(tracer_provider), Some(meter_provider));
 
@@ -59,76 +61,36 @@ async fn main() -> anyhow::Result<()> {
 
 ```rust
 use opentelemetry::KeyValue;
-use tracing_opentelemetry_extra::{get_resource, init_tracer_provider, init_meter_provider, ProviderGuard};
+use tracing_opentelemetry_extra::{get_resource, init_tracer_provider, init_meter_provider, init_tracing_subscriber, OtelGuard};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Create resource
-    let resource = get_resource("my-service", &[KeyValue::new("environment", "production")]);
+    let service_name = "my-service";
+    let resource = get_resource(service_name, &[KeyValue::new("environment", "production")]);
     
     // Initialize providers
     let tracer_provider = init_tracer_provider(&resource, 1.0)?;
     let meter_provider = init_meter_provider(&resource, 30)?;
 
     // Set up tracing subscriber
-    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    let env_filter = init_env_filter(&Level::INFO);
     
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer())
-        .with(tracing_opentelemetry::layer().with_tracer(tracer_provider.tracer("my-service")))
-        .with(tracing_opentelemetry::MetricsLayer::new(meter_provider))
-        .with(env_filter)
-        .init();
-
     // Create guard for cleanup
-    let _guard = OtelGuard::new(Some(tracer_provider), Some(meter_provider));
+    let _guard = init_tracing_subscriber(
+        service_name,
+        env_filter,
+        vec![Box::new(tracing_subscriber::fmt::layer())],
+        tracer_provider,
+        meter_provider,
+    )?;
 
     // Your application code here...
     tracing::info!("Application started with OpenTelemetry");
 
     Ok(())
 }
-```
-
-## API Reference
-
-### Core Functions
-
-#### `get_resource(service_name: &str, attributes: &[KeyValue]) -> Resource`
-
-Creates an OpenTelemetry resource with the given service name and attributes.
-
-```rust
-let resource = get_resource(
-    "my-service",
-    &[KeyValue::new("environment", "production")],
-);
-```
-
-#### `init_tracer_provider(resource: &Resource, sample_ratio: f64) -> Result<SdkTracerProvider>`
-
-Initializes a tracer provider with OTLP exporter and configurable sampling.
-
-```rust
-let tracer_provider = init_tracer_provider(&resource, 1.0)?;
-```
-
-#### `init_meter_provider(resource: &Resource, metrics_interval_secs: u64) -> Result<SdkMeterProvider>`
-
-Initializes a meter provider with periodic metric collection.
-
-```rust
-let meter_provider = init_meter_provider(&resource, 30)?;
-```
-
-### OtelGuard
-
-A guard that ensures proper cleanup of OpenTelemetry resources when dropped.
-
-```rust
-let guard = OtelGuard::new(Some(tracer_provider), Some(meter_provider));
-// Resources will be automatically cleaned up when guard is dropped
 ```
 
 ## Configuration
