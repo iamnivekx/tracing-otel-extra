@@ -59,7 +59,7 @@ async fn get_article(
     }
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(state))]
 async fn get_articles_by_author(
     State(state): State<AppState>,
     Path(author_id): Path<u64>,
@@ -93,7 +93,7 @@ async fn get_articles_by_author(
     Ok(Json(author_articles))
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(state))]
 async fn create_article(
     State(state): State<AppState>,
     Json(payload): Json<CreateArticle>,
@@ -112,7 +112,9 @@ async fn create_article(
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let _guard = Logger::default().init()?;
+    dotenvy::dotenv().ok();
+    let logger = Logger::from_env(Some("LOG_"))?;
+    let _guard = logger.init()?;
 
     let retry_policy = ExponentialBackoff::builder().build_with_max_retries(3);
     let client: ClientWithMiddleware = ClientBuilder::new(reqwest::Client::new())

@@ -7,7 +7,7 @@ use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
-use tracing::{debug, info};
+use tracing::info;
 use tracing_otel_extra::Logger;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -20,7 +20,6 @@ pub struct HelloQuery {
 
 #[tracing::instrument]
 async fn hello(q: Query<HelloQuery>) -> &'static str {
-    debug!("hello request query: {:?}", q);
     "Hello world!"
 }
 

@@ -12,6 +12,7 @@ use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
+use tracing::Level;
 use tracing_otel_extra::Logger;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -32,13 +33,18 @@ struct AppState {
     users: Arc<tokio::sync::RwLock<Vec<User>>>,
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(state))]
 async fn get_users(State(state): State<AppState>) -> Json<Vec<User>> {
     let users = state.users.read().await;
     Json(users.clone())
 }
 
 #[tracing::instrument]
+async fn health() -> &'static str {
+    "OK"
+}
+
+#[tracing::instrument(skip(state))]
 async fn get_user(
     State(state): State<AppState>,
     Path(id): Path<u64>,
@@ -69,7 +75,10 @@ async fn create_user(State(state): State<AppState>, Json(payload): Json<CreateUs
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let _guard = Logger::default().init()?;
+    dotenvy::dotenv().ok();
+    let mut logger = Logger::from_env(Some("LOG_"))?;
+    logger = logger.with_ansi(true);
+    let _guard = logger.init()?;
 
     let state = AppState {
         users: Arc::new(tokio::sync::RwLock::new(Vec::new())),
@@ -84,12 +93,13 @@ async fn main() -> Result<()> {
                 .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
                 .layer(
                     TraceLayer::new_for_http()
-                        .make_span_with(AxumOtelSpanCreator::new())
-                        .on_response(AxumOtelOnResponse::new())
-                        .on_failure(AxumOtelOnFailure::new()),
+                        .make_span_with(AxumOtelSpanCreator::new().level(Level::INFO))
+                        .on_response(AxumOtelOnResponse::new().level(Level::INFO))
+                        .on_failure(AxumOtelOnFailure::new().level(Level::ERROR)),
                 )
                 .layer(PropagateRequestIdLayer::x_request_id()),
         )
+        .route("/health", get(health)) // without request id, the span will not be created
         .with_state(state);
 
     let listener = TcpListener::bind("127.0.0.1:8081").await?;

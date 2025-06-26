@@ -30,6 +30,7 @@ tracing-otel-extra = { path = "crates/tracing-otel", features = [
 ], version = "0.30.8-alpha.1" }
 tracing-opentelemetry-extra = { path = "crates/tracing-opentelemetry", version = "0.30.8-alpha.1" }
 tracing-subscriber-extra = { path = "crates/tracing-subscriber", version = "0.30.7" }
+axum-otel = { path = "crates/axum-otel" }
 
 tokio = { version = "1.45.1", features = ["full"] }
 tracing = { version = "0.1" }
@@ -62,4 +63,5 @@ anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
+dotenvy = { version = "0.15.7" }
 envy = { version = "0.4.2" }
