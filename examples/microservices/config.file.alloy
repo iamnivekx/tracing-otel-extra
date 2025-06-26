@@ -1,0 +1,40 @@
+///////////////////////////////////////////////////////////////////////////////
+// Configuration file
+// Log file source
+loki.source.file "tmpfiles" {
+  targets    = [
+    {__path__ = "/logs/articles.log", "app" = "articles"},
+    {__path__ = "/logs/users.log", "app" = "users"},
+  ]
+  forward_to = [loki.process.extract_tracing_fields.receiver]
+  tail_from_end = true
+}
+
+// Log processing pipeline to extract request_id and trace_id
+loki.process "extract_tracing_fields" {
+  forward_to = [loki.write.to_loki.receiver]
+
+  // Parse JSON log format - extract from spans array
+  stage.json {
+    expressions = {
+      "trace_id" = "spans.trace_id",
+    }
+  }
+
+  // Extract fields as labels
+  stage.labels {
+    values = {
+      trace_id = "",
+    }
+  }
+}
+
+loki.write "to_loki" {
+  endpoint {
+		url = string.format(
+			"http://%s/loki/api/v1/push",
+			coalesce(sys.env("LOKI_HOST"), "localhost:3100"),
+		)
+	}
+  external_labels = {}
+}

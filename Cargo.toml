@@ -57,7 +57,7 @@ tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
 reqwest = { version = "0.12", features = ["json"] }
 reqwest-middleware = "0.4.2"
 reqwest-retry = "0.7"
-reqwest-tracing = { version = "0.5", features = ["opentelemetry_0_29"] }
+reqwest-tracing = { version = "0.5.8", features = ["opentelemetry_0_30"] }
 
 anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
