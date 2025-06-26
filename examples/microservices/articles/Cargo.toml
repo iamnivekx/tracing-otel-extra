@@ -9,8 +9,7 @@ license.workspace = true
 axum = { workspace = true }
 axum-otel = { path = "../../../crates/axum-otel" }
 tracing-otel-extra = { path = "../../../crates/tracing-otel", features = [
-	"otel",
-	"http",
+	"env",
 ] }
 
 tower = { workspace = true }

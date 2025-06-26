@@ -69,7 +69,7 @@ async fn create_user(State(state): State<AppState>, Json(payload): Json<CreateUs
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    Logger::default().init()?;
+    let _guard = Logger::default().init()?;
 
     let state = AppState {
         users: Arc::new(tokio::sync::RwLock::new(Vec::new())),

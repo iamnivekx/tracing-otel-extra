@@ -112,7 +112,7 @@ async fn create_article(
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    Logger::default().init()?;
+    let _guard = Logger::default().init()?;
 
     let retry_policy = ExponentialBackoff::builder().build_with_max_retries(3);
     let client: ClientWithMiddleware = ClientBuilder::new(reqwest::Client::new())

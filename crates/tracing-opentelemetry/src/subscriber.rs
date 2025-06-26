@@ -42,7 +42,7 @@ pub fn init_tracing_subscriber(
     // Set up telemetry layer with tracer
     let tracer = tracer_provider.tracer(name.to_string());
     let metrics_layer = tracing_opentelemetry::MetricsLayer::new(meter_provider.clone());
-    let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
+    let otel_layer = tracing_opentelemetry::OpenTelemetryLayer::new(tracer);
 
     let extended_layers: Vec<BoxLayer> = vec![Box::new(metrics_layer), Box::new(otel_layer)];
 

@@ -32,10 +32,9 @@ async fn health() -> &'static str {
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
-    // Consider changing to anyhow::Result for broader error handling
     let mut logger = Logger::from_env(Some("LOG_"))?;
     logger = logger.with_ansi(true);
-    logger.init()?;
+    let _guard = logger.init()?;
 
     // Setup Axum router and server
     let app = Router::new()
