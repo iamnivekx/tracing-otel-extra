@@ -11,7 +11,7 @@ resolver = "2"
 
 [workspace.package]
 rust-version = "1.82"
-version = "0.30.8-alpha.1"
+version = "0.30.8"
 authors = ["nivek <h49987180@gmail.com>"]
 edition = "2021"
 license = "MIT/Apache-2.0"
@@ -27,9 +27,8 @@ categories = ["asynchronous", "web-programming"]
 tracing-otel-extra = { path = "crates/tracing-otel", features = [
     "fields",
     "context",
-], version = "0.30.8-alpha.1" }
-tracing-opentelemetry-extra = { path = "crates/tracing-opentelemetry", version = "0.30.8-alpha.1" }
-tracing-subscriber-extra = { path = "crates/tracing-subscriber", version = "0.30.7" }
+], version = "0.30.8" }
+tracing-opentelemetry-extra = { path = "crates/tracing-opentelemetry", version = "0.30.8" }
 axum-otel = { path = "crates/axum-otel" }
 
 tokio = { version = "1.45.1", features = ["full"] }
