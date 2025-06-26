@@ -50,9 +50,7 @@ dependencies = [
  "tower",
  "tower-http",
  "tracing",
- "tracing-opentelemetry",
  "tracing-otel-extra",
- "tracing-subscriber",
 ]
 
 [[package]]
@@ -156,9 +154,6 @@ dependencies = [
  "axum",
  "axum-otel",
  "dotenvy",
- "opentelemetry",
- "opentelemetry-otlp",
- "opentelemetry_sdk",
  "serde",
  "serde_json",
  "tokio",
@@ -2099,9 +2094,6 @@ dependencies = [
  "axum",
  "axum-otel",
  "dotenvy",
- "opentelemetry",
- "opentelemetry-otlp",
- "opentelemetry_sdk",
  "serde",
  "serde_json",
  "tokio",
