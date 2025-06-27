@@ -28,7 +28,7 @@ OpenTelemetry tracing middleware for Axum web framework
 - Customizable span attributes
 - Metrics collection
 
-### [tracing-otel](./crates/tracing-otel/README.md)
+### [tracing-otel-extra](./crates/tracing-otel/README.md)
 OpenTelemetry tracing support for tracing-subscriber
 - Easy-to-use configuration through Builder pattern
 - Multiple log output formats (Compact, Pretty, JSON)
@@ -36,7 +36,7 @@ OpenTelemetry tracing support for tracing-subscriber
 - Built-in metrics support
 - Environment detection and configuration
 
-### [tracing-opentelemetry](./crates/tracing-opentelemetry/README.md)
+### [tracing-opentelemetry-extra](./crates/tracing-opentelemetry/README.md)
 Enhanced OpenTelemetry integration utilities
 - Clean, easy-to-use API for OpenTelemetry setup
 - Configurable sampling and resource attributes
