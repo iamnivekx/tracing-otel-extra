@@ -19,9 +19,17 @@ repository = "https://github.com/iamnivekx/tracing-otel-extra"
 documentation = "https://docs.rs/tracing-otel-extra/"
 readme = "README.md"
 description = "Tracing and OpenTelemetry integration utility library for Rust applications."
-
-keywords = ["http", "axum", "tracing", "logging"]
-categories = ["asynchronous", "web-programming"]
+keywords = [
+    "axum",
+    "tracing",
+    "logging",
+    "opentelemetry",
+    "otel",
+    "jaeger",
+    "loki",
+    "tempo",
+]
+categories = ["asynchronous", "observability"]
 
 [workspace.dependencies]
 axum-otel = { path = "crates/axum-otel" }
