@@ -1,0 +1,17 @@
+# Stage 4: Runtime for otel example
+FROM debian:bookworm-slim AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	ca-certificates \
+	openssl \
+	libssl3 \
+	&& rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+# Copy the built binary from the builder stage
+COPY --from=builder /app/target/release/axum-otel-demo /usr/local/bin/axum-otel-demo
+
+# Expose the application port
+EXPOSE 8000
+
+# Set entrypoint
+ENTRYPOINT ["axum-otel-demo"]

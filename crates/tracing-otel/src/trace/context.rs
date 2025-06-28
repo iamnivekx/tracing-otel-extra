@@ -193,7 +193,7 @@ mod tests {
         init_tracing();
         let mut headers = http::HeaderMap::new();
         let expected_trace_id = "4bf92f3577b34da6a3ce929d0e0e4736";
-        let traceparent = format!("00-{}-00f067aa0ba902b7-01", expected_trace_id);
+        let traceparent = format!("00-{expected_trace_id}-00f067aa0ba902b7-01");
         println!("Setting traceparent header: {}", traceparent);
         headers.insert("traceparent", traceparent.parse().unwrap());
 

@@ -224,8 +224,7 @@ where
             "FMT::FULL" | "FmtSpan::FULL" => return Ok(FmtSpan::FULL),
             _ => {
                 return Err(serde::de::Error::custom(format!(
-                    "Invalid span events: '{}'. Valid options: FMT::NEW, FMT::ENTER, FMT::EXIT, FMT::CLOSE, FMT::NONE, FMT::ACTIVE, FMT::FULL",
-                    part
+                    "Invalid span events: '{part}'. Valid options: FMT::NEW, FMT::ENTER, FMT::EXIT, FMT::CLOSE, FMT::NONE, FMT::ACTIVE, FMT::FULL"
                 )));
             }
         };

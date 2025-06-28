@@ -31,8 +31,7 @@ where
         "pretty" => Ok(LogFormat::Pretty),
         "json" => Ok(LogFormat::Json),
         _ => Err(serde::de::Error::custom(format!(
-            "Invalid log format: '{}'",
-            s
+            "Invalid log format: '{s}'"
         ))),
     }
 }
@@ -53,15 +52,14 @@ where
             let s = s.trim();
             let (key, value) = s
                 .split_once('=')
-                .ok_or_else(|| serde::de::Error::custom(format!("Invalid attribute: '{}'", s)))?;
+                .ok_or_else(|| serde::de::Error::custom(format!("Invalid attribute: '{s}'")))?;
 
             let key = key.trim();
             let value = value.trim();
 
             if key.is_empty() || value.is_empty() {
                 return Err(serde::de::Error::custom(format!(
-                    "Empty key or value: '{}'",
-                    s
+                    "Empty key or value: '{s}'"
                 )));
             }
 

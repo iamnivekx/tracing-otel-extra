@@ -71,8 +71,7 @@ mod tests {
             .expect("traceparent header should be valid UTF-8");
 
         // Expected format: 00-<trace_id>-<span_id>-<flags>
-        let expected_traceparent =
-            format!("00-{}-{}-01", trace_id.to_string(), span_id.to_string());
+        let expected_traceparent = format!("00-{trace_id}-{span_id}-01");
         assert_eq!(traceparent, expected_traceparent);
 
         // Verify the tracestate header was set (should be empty in this case)
@@ -116,8 +115,7 @@ mod tests {
             .to_str()
             .expect("traceparent header should be valid UTF-8");
 
-        let expected_traceparent =
-            format!("00-{}-{}-01", trace_id.to_string(), span_id.to_string());
+        let expected_traceparent = format!("00-{trace_id}-{span_id}-01");
         assert_eq!(traceparent, expected_traceparent);
 
         // Verify the tracestate header

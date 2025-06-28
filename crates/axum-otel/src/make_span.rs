@@ -80,7 +80,7 @@ impl<B> MakeSpan<B> for AxumOtelSpanCreator {
 
         let span_name = http_route.as_ref().map_or_else(
             || http_method.to_string(),
-            |route| format!("{} {}", http_method, route),
+            |route| format!("{http_method} {route}"),
         );
 
         let span = dyn_span!(

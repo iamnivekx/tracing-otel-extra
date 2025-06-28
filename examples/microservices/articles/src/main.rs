@@ -65,20 +65,20 @@ async fn get_articles_by_author(
     Path(author_id): Path<u64>,
 ) -> Result<Json<Vec<Article>>, (axum::http::StatusCode, String)> {
     // First verify that the author exists by calling the users service
-    let user_url = format!("http://localhost:8081/users/{}", author_id);
+    let user_url = format!("http://localhost:8081/users/{author_id}");
     match state.http_client.get(&user_url).send().await {
         Ok(response) => {
             if !response.status().is_success() {
                 return Err((
                     axum::http::StatusCode::NOT_FOUND,
-                    format!("Author with id {} not found", author_id),
+                    format!("Author with id {author_id} not found"),
                 ));
             }
         }
         Err(e) => {
             return Err((
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to verify author: {}", e),
+                format!("Failed to verify author: {e}"),
             ));
         }
     }
