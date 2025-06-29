@@ -31,6 +31,7 @@ async fn health() -> &'static str {
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
+
     let mut logger = Logger::from_env(Some("LOG_"))?;
     logger = logger.with_ansi(true);
     let _guard = logger.init()?;
@@ -51,8 +52,8 @@ async fn main() -> Result<()> {
         )
         .route("/health", get(health)); // without request id, the span will not be created
 
-    let listener = TcpListener::bind("127.0.0.1:8080").await?;
-    info!("Server is running on http://127.0.0.1:8080");
+    let listener = TcpListener::bind("0.0.0.0:8080").await?;
+    info!("Server is running on http://0.0.0.0:8080");
     axum::serve(listener, app.into_make_service()).await?;
 
     Ok(())

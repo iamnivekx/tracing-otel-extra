@@ -1,10 +1,28 @@
-use crate::otel::{
-    get_resource, init_meter_provider, init_tracer_provider, init_tracing_subscriber,
-    opentelemetry::KeyValue, OtelGuard,
+use crate::{
+    logs::{LogFormat, Logger},
+    otel::{
+        get_resource, init_meter_provider, init_tracer_provider, init_tracing_subscriber,
+        opentelemetry::KeyValue, OtelGuard,
+    },
 };
-use anyhow::Result;
+use anyhow::{anyhow, Context, Result};
+use std::sync::OnceLock;
 use tracing::Level;
-use tracing_subscriber::{EnvFilter, Layer, Registry};
+use tracing_appender::non_blocking::WorkerGuard;
+use tracing_opentelemetry_extra::BoxLayer;
+use tracing_subscriber::{
+    fmt::{self, format::FmtSpan, MakeWriter},
+    EnvFilter, Layer, Registry,
+};
+
+// Keep non-blocking appender worker guard to prevent log loss
+static NONBLOCKING_APPENDER_GUARD: OnceLock<WorkerGuard> = OnceLock::new();
+
+pub fn set_nonblocking_appender_guard(guard: WorkerGuard) -> Result<()> {
+    NONBLOCKING_APPENDER_GUARD
+        .set(guard)
+        .map_err(|_| anyhow!("cannot lock for appender"))
+}
 
 /// Creates an environment filter for tracing based on the given level.
 ///
@@ -27,6 +45,92 @@ pub fn init_env_filter(level: &Level) -> EnvFilter {
     EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(level.to_string()))
 }
 
+/// Initialize a format layer with the given writer and format
+pub fn init_layer<W2>(
+    writer: W2,
+    format: &LogFormat,
+    span_events: FmtSpan,
+    ansi: bool,
+) -> Box<dyn Layer<Registry> + Sync + Send>
+where
+    W2: for<'writer> MakeWriter<'writer> + Sync + Send + 'static,
+{
+    let layer = fmt::Layer::new()
+        .with_writer(writer)
+        .with_ansi(ansi)
+        .with_span_events(span_events);
+
+    match format {
+        LogFormat::Compact => layer.compact().boxed(),
+        LogFormat::Pretty => layer.pretty().boxed(),
+        LogFormat::Json => {
+            let fmt_format = fmt::format().json().flatten_event(true);
+            let json_fields = fmt::format::JsonFields::new();
+            layer
+                .event_format(fmt_format)
+                .fmt_fields(json_fields)
+                .boxed()
+        }
+    }
+}
+
+/// Create output layers based on configuration.
+///
+/// This function creates output layers based on the provided configuration.
+///
+/// # Arguments
+///
+/// * `console_enabled` - Whether to enable console output
+pub fn create_output_layers(logger: &Logger) -> Result<Vec<BoxLayer>> {
+    let mut layers: Vec<BoxLayer> = vec![];
+
+    // Add console layer if enabled
+    if logger.console_enabled {
+        let stdout_layer = init_layer(
+            std::io::stdout,
+            &logger.format,
+            logger.span_events.clone(),
+            logger.ansi,
+        );
+        layers.push(stdout_layer);
+    }
+    // Add file layer if configured and enabled
+    if let Some(config) = &logger.file_appender {
+        if config.enable {
+            let rolling_builder = tracing_appender::rolling::Builder::new()
+                .max_log_files(config.max_log_files)
+                .rotation(config.get_rolling_rotation());
+
+            let file_appender = rolling_builder
+                .filename_prefix(config.filename_prefix_or_default())
+                .filename_suffix(config.filename_suffix_or_default())
+                .build(config.dir_or_default())
+                .context("Failed to build file appender")?;
+
+            let file_appender_layer = if config.non_blocking {
+                let (non_blocking_file_appender, work_guard) =
+                    tracing_appender::non_blocking(file_appender);
+                set_nonblocking_appender_guard(work_guard)?;
+                init_layer(
+                    non_blocking_file_appender,
+                    &config.format_or_default(),
+                    logger.span_events.clone(),
+                    config.ansi,
+                )
+            } else {
+                init_layer(
+                    file_appender,
+                    &config.format_or_default(),
+                    logger.span_events.clone(),
+                    config.ansi,
+                )
+            };
+            layers.push(file_appender_layer);
+        }
+    }
+    Ok(layers)
+}
+
 /// Initializes the complete tracing stack with OpenTelemetry integration.
 ///
 /// This function sets up the entire tracing infrastructure, including:
@@ -43,6 +147,8 @@ pub fn init_env_filter(level: &Level) -> EnvFilter {
 /// * `metrics_interval_secs` - The interval in seconds between metric collections
 /// * `level` - The default tracing level
 /// * `fmt_layer` - A formatting layer for the tracing output
+/// * `console_enabled` - Whether to enable console output
+/// * `file_appender` - Optional file appender configuration
 ///
 /// # Returns
 ///
@@ -55,16 +161,20 @@ pub fn init_env_filter(level: &Level) -> EnvFilter {
 /// use tracing_otel_extra::logs::setup_tracing;
 /// use opentelemetry::KeyValue;
 /// use tracing::Level;
+/// use tracing_subscriber::fmt;
+/// use tracing_subscriber::fmt::Layer;
+/// use tracing_opentelemetry_extra::BoxLayer;
 ///
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
+///     let layers: Vec<BoxLayer> = vec![Box::new(fmt::Layer::new().compact())];
 ///     let guard = setup_tracing(
 ///         "my-service",
 ///         &[KeyValue::new("environment", "production")],
 ///         1.0,
 ///         30,
 ///         Level::INFO,
-///         tracing_subscriber::fmt::layer(),
+///         layers,
 ///     )?;
 ///
 ///     // Your application code here...
@@ -74,22 +184,18 @@ pub fn init_env_filter(level: &Level) -> EnvFilter {
 ///     Ok(())
 /// }
 /// ```
-pub fn setup_tracing<S>(
+pub fn setup_tracing(
     service_name: &str,
     attributes: &[KeyValue],
     sample_ratio: f64,
     metrics_interval_secs: u64,
     level: Level,
-    fmt_layer: S,
-) -> Result<OtelGuard>
-where
-    S: tracing_subscriber::Layer<Registry> + Send + Sync + 'static,
-{
+    layers: Vec<BoxLayer>,
+) -> Result<OtelGuard> {
     let env_filter = init_env_filter(&level);
     let resource = get_resource(service_name, attributes);
     let tracer_provider = init_tracer_provider(&resource, sample_ratio)?;
     let meter_provider = init_meter_provider(&resource, metrics_interval_secs)?;
-    let layers: Vec<Box<dyn Layer<Registry> + Sync + Send>> = vec![Box::new(fmt_layer)];
 
     let guard = init_tracing_subscriber(
         service_name,

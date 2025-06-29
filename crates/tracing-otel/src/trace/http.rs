@@ -125,7 +125,6 @@ mod tests {
             .expect("tracestate header should be set")
             .to_str()
             .expect("tracestate header should be valid UTF-8");
-        println!("tracestate: {}", tracestate);
         assert_eq!(tracestate, "key1=value1,key2=value2");
     }
 

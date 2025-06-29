@@ -2,6 +2,15 @@ name: Docker Build
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build for'
+        required: true
+        type: choice
+        options:
+          - linux/amd64
+          - linux/arm64
+        default: linux/arm64
 
 env:
   CARGO_TERM_COLOR: always
@@ -10,13 +19,28 @@ env:
 
 jobs:
   docker-build:
-    name: Build Docker Images
+    name: Build Docker Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=ref,event=branch
+            type=ref,event=pr 
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Log in to Container Registry
         uses: docker/login-action@v3
@@ -28,50 +52,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build base image with all binaries
+      - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          build-args: |
-            PACKAGE_NAMES=users-service,articles-service,axum-otel-demo
-          push: false
-          tags: tracing-otel-extra-builder:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build users service runtime
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.users
+          platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/users:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/users:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build articles service runtime
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.articles
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/articles:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/articles:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build otel example runtime
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.demo
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/axum-otel-demo:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/axum-otel-demo:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -2,11 +2,8 @@ use anyhow::Result;
 use opentelemetry::KeyValue;
 use serde::{Deserialize, Serialize};
 use tracing::Level;
-use tracing_subscriber::{
-    fmt::{self, format::FmtSpan},
-    layer::Layer,
-    registry::Registry,
-};
+use tracing_opentelemetry_extra::BoxLayer;
+use tracing_subscriber::{fmt, layer::Layer, registry::Registry};
 
 // Define an enumeration for log formats
 #[derive(Debug, Default, Clone, Deserialize, Serialize, PartialEq)]
@@ -18,6 +15,19 @@ pub enum LogFormat {
     Pretty,
     #[serde(rename = "json")]
     Json,
+}
+
+#[derive(Debug, Default, Clone, Deserialize, Serialize, PartialEq)]
+pub enum LogRollingRotation {
+    #[serde(rename = "minutely")]
+    Minutely,
+    #[serde(rename = "hourly")]
+    #[default]
+    Hourly,
+    #[serde(rename = "daily")]
+    Daily,
+    #[serde(rename = "never")]
+    Never,
 }
 
 // Parse log format from string
@@ -77,10 +87,7 @@ where
 }
 
 // Configure layer based on log format
-pub fn configure_log_format(
-    layer: fmt::Layer<Registry>,
-    format: LogFormat,
-) -> Box<dyn Layer<Registry> + Send + Sync> {
+pub fn configure_log_format(layer: fmt::Layer<Registry>, format: LogFormat) -> BoxLayer {
     match format {
         LogFormat::Compact => layer.compact().boxed(),
         LogFormat::Pretty => layer.pretty().boxed(),
@@ -93,19 +100,6 @@ pub fn configure_log_format(
                 .boxed()
         }
     }
-}
-
-// Initialize format layer
-pub fn init_format_layer(
-    format: LogFormat,
-    ansi: bool,
-    span_events: FmtSpan,
-) -> Box<dyn Layer<Registry> + Sync + Send> {
-    let layer = fmt::Layer::default()
-        .with_ansi(ansi)
-        .with_span_events(span_events);
-
-    configure_log_format(layer, format)
 }
 
 #[cfg(test)]

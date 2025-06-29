@@ -27,6 +27,7 @@ opentelemetry-http = { workspace = true, optional = true }
 
 # tracing and tracing-opentelemetry
 tracing = { workspace = true, optional = true }
+tracing-appender = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true, features = ["json"], optional = true }
 tracing-opentelemetry = { workspace = true, optional = true }
 tracing-opentelemetry-extra = { workspace = true, optional = true }
@@ -63,6 +64,7 @@ otel = ["dep:tracing-opentelemetry-extra"]
 # Core features
 logger = [
 	"dep:tracing-subscriber",
+	"dep:tracing-appender",
 	"tracing-opentelemetry-extra/subscriber",
 	"otel",
 ]

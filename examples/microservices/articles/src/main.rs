@@ -147,8 +147,8 @@ async fn main() -> Result<()> {
         )
         .with_state(state);
 
-    let listener = TcpListener::bind("127.0.0.1:8082").await?;
-    tracing::info!("Articles service listening on 127.0.0.1:8082");
+    let listener = TcpListener::bind("0.0.0.0:8082").await?;
+    tracing::info!("Articles service listening on 0.0.0.0:8082");
     axum::serve(listener, app.into_make_service()).await?;
 
     Ok(())

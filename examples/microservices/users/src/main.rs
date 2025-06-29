@@ -102,8 +102,8 @@ async fn main() -> Result<()> {
         .route("/health", get(health)) // without request id, the span will not be created
         .with_state(state);
 
-    let listener = TcpListener::bind("127.0.0.1:8081").await?;
-    tracing::info!("Users service listening on 127.0.0.1:8081");
+    let listener = TcpListener::bind("0.0.0.0:8081").await?;
+    tracing::info!("Users service listening on 0.0.0.0:8081");
     axum::serve(listener, app.into_make_service()).await?;
 
     Ok(())

@@ -83,7 +83,7 @@ pub use otel::*;
 
 // Logger module exports
 #[cfg(feature = "logger")]
-pub use logs::{init_logging, FmtSpan, LogFormat, Logger};
+pub use logs::{init_logging, FmtSpan, LogFormat, LogRollingRotation, Logger, LoggerFileAppender};
 
 // Logger module exports
 #[cfg(feature = "env")]
