@@ -415,23 +415,23 @@ impl LoggerFileAppender {
     }
 
     pub fn dir_or_default(&self) -> String {
-        self.dir.clone().unwrap_or_else(|| default::dir())
+        self.dir.clone().unwrap_or_else(default::dir)
     }
 
     pub fn filename_prefix_or_default(&self) -> String {
         self.filename_prefix
             .clone()
-            .unwrap_or_else(|| default::filename_prefix())
+            .unwrap_or_else(default::filename_prefix)
     }
 
     pub fn filename_suffix_or_default(&self) -> String {
         self.filename_suffix
             .clone()
-            .unwrap_or_else(|| default::filename_suffix())
+            .unwrap_or_else(default::filename_suffix)
     }
 
     pub fn format_or_default(&self) -> LogFormat {
-        self.format.clone().unwrap_or_else(|| LogFormat::Compact)
+        self.format.clone().unwrap_or(LogFormat::Compact)
     }
 
     pub fn get_rolling_rotation(&self) -> Rotation {

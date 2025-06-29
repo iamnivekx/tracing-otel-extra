@@ -13,11 +13,17 @@
 /// - Based on configuration
 /// - Based on runtime conditions
 ///
+/// # Performance
+///
+/// The macro expands to a match statement on the level, which has minimal runtime overhead.
+/// The actual event emission is still handled by tracing's efficient filtering system.
+///
 /// # Example
 ///
 /// ```rust
 /// use tracing_otel_extra::dyn_event;
 /// use tracing::Level;
+///
 /// let is_critical_error = true;
 /// // Determine level at runtime
 /// let level = if is_critical_error {
@@ -35,11 +41,6 @@
 /// The `log` crate allows dynamic levels by default, but `tracing` requires static metadata
 /// for performance reasons. This macro provides a similar experience to `log` while maintaining
 /// `tracing`'s performance benefits.
-///
-/// # Performance
-///
-/// The macro expands to a match statement on the level, which has minimal runtime overhead.
-/// The actual event emission is still handled by tracing's efficient filtering system.
 #[macro_export]
 macro_rules! dyn_event {
     ($lvl:expr, $($tt:tt)*) => {
@@ -58,11 +59,17 @@ macro_rules! dyn_event {
 /// Similar to `dyn_event!`, this macro allows creating spans with a runtime-determined level.
 /// This implementation is based on the discussion in [tracing issue #2730](https://github.com/tokio-rs/tracing/issues/2730).
 ///
+/// # Performance
+///
+/// Like `dyn_event!`, this macro expands to a match statement with minimal runtime overhead.
+/// The span creation is still handled by tracing's efficient filtering system.
+///
 /// # Example
 ///
 /// ```rust
 /// use tracing_otel_extra::dyn_span;
 /// use tracing::Level;
+///
 /// let is_important_operation = true;
 /// let level = if is_important_operation {
 ///     Level::INFO
@@ -74,11 +81,6 @@ macro_rules! dyn_event {
 /// let _guard = span.enter();
 /// // ... do work ...
 /// ```
-///
-/// # Performance
-///
-/// Like `dyn_event!`, this macro expands to a match statement with minimal runtime overhead.
-/// The span creation is still handled by tracing's efficient filtering system.
 #[macro_export]
 macro_rules! dyn_span {
     ($lvl:expr, $($tt:tt)*) => {
@@ -98,7 +100,7 @@ mod tests {
     use tracing::Level;
 
     #[test]
-    fn test_basic_usage() {
+    fn test_dyn_event_basic_usage() {
         let level = Level::INFO;
         // Test all log levels
         dyn_event!(level, "error message");
@@ -109,7 +111,7 @@ mod tests {
     }
 
     #[test]
-    fn test_with_fields() {
+    fn test_dyn_event_with_fields() {
         let level = Level::INFO;
         dyn_event!(level, field1 = "value1", field2 = 42, "message with fields");
         let request_id = "uuid";
@@ -120,6 +122,17 @@ mod tests {
     #[test]
     fn test_dyn_span() {
         let level = Level::INFO;
-        dyn_span!(level, "span message");
+        let _span = dyn_span!(level, "span message");
+    }
+
+    #[test]
+    fn test_dyn_span_with_fields() {
+        let level = Level::DEBUG;
+        let _span = dyn_span!(
+            level,
+            "operation",
+            operation_type = "database_query",
+            duration_ms = 150
+        );
     }
 }
