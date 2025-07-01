@@ -186,7 +186,7 @@ export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
 export RUST_LOG=debug
 
 # Resource attributes
-export OTEL_RESOURCE_ATTRIBUTES=service.name=my-service,service.version=1.0.0
+export OTEL_RESOURCE_ATTRIBUTES='service.name=my-service,service.version=1.0.0'
 ```
 
 ### Sampling Configuration
