@@ -45,6 +45,25 @@ pub fn init_env_filter(level: &Level) -> EnvFilter {
     EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(level.to_string()))
 }
 
+/// Apply the specified format to a tracing layer
+fn apply_layer_format<N, W>(
+    layer: fmt::Layer<Registry, N, fmt::format::Format, W>,
+    format: &LogFormat,
+) -> Box<dyn Layer<Registry> + Sync + Send>
+where
+    N: for<'writer> fmt::format::FormatFields<'writer> + Sync + Send + 'static,
+    W: for<'writer> MakeWriter<'writer> + Sync + Send + 'static,
+{
+    match format {
+        LogFormat::Compact => layer.compact().boxed(),
+        LogFormat::Pretty => layer.pretty().boxed(),
+        LogFormat::Json => layer
+            .event_format(fmt::format().json().flatten_event(true))
+            .fmt_fields(fmt::format::JsonFields::new())
+            .boxed(),
+    }
+}
+
 /// Initialize a format layer with the given writer and format
 pub fn init_layer<W2>(
     writer: W2,
@@ -59,19 +78,7 @@ where
         .with_writer(writer)
         .with_ansi(ansi)
         .with_span_events(span_events);
-
-    match format {
-        LogFormat::Compact => layer.compact().boxed(),
-        LogFormat::Pretty => layer.pretty().boxed(),
-        LogFormat::Json => {
-            let fmt_format = fmt::format().json().flatten_event(true);
-            let json_fields = fmt::format::JsonFields::new();
-            layer
-                .event_format(fmt_format)
-                .fmt_fields(json_fields)
-                .boxed()
-        }
-    }
+    apply_layer_format(layer, format)
 }
 
 /// Create output layers based on configuration.

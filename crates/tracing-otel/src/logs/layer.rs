@@ -2,8 +2,6 @@ use anyhow::Result;
 use opentelemetry::KeyValue;
 use serde::{Deserialize, Serialize};
 use tracing::Level;
-use tracing_opentelemetry_extra::BoxLayer;
-use tracing_subscriber::{fmt, layer::Layer, registry::Registry};
 
 // Define an enumeration for log formats
 #[derive(Debug, Default, Clone, Deserialize, Serialize, PartialEq)]
@@ -84,22 +82,6 @@ where
 {
     let s = String::deserialize(deserializer)?;
     s.parse().map_err(serde::de::Error::custom)
-}
-
-// Configure layer based on log format
-pub fn configure_log_format(layer: fmt::Layer<Registry>, format: LogFormat) -> BoxLayer {
-    match format {
-        LogFormat::Compact => layer.compact().boxed(),
-        LogFormat::Pretty => layer.pretty().boxed(),
-        LogFormat::Json => {
-            let fmt_format = fmt::format().json().flatten_event(true);
-            let json_fields = fmt::format::JsonFields::new();
-            layer
-                .event_format(fmt_format)
-                .fmt_fields(json_fields)
-                .boxed()
-        }
-    }
 }
 
 #[cfg(test)]

@@ -29,5 +29,4 @@ tracing-subscriber = { workspace = true, optional = true }
 tokio = { workspace = true }
 
 [features]
-default = ["subscriber"]
 subscriber = ["dep:tracing-subscriber"]

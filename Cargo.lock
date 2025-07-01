@@ -136,14 +136,9 @@ version = "0.30.8"
 dependencies = [
  "axum",
  "opentelemetry",
- "opentelemetry-otlp",
- "opentelemetry_sdk",
- "tokio",
  "tower-http",
  "tracing",
- "tracing-opentelemetry",
  "tracing-otel-extra",
- "tracing-subscriber",
 ]
 
 [[package]]
