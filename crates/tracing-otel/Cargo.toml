@@ -59,9 +59,10 @@ http = [
 ]
 
 # Core features
+# This feature is used to enable the OpenTelemetry integration.
 otel = ["dep:tracing-opentelemetry-extra"]
 
-# Core features
+# This feature is used to enable the logging integration.
 logger = [
 	"dep:tracing-subscriber",
 	"dep:tracing-appender",

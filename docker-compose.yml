@@ -1,0 +1,61 @@
+services:
+  # Grafana Alloy
+  alloy:
+    image: grafana/alloy:v1.7.5
+    volumes:
+      - './alloy/config.alloy:/etc/alloy/config.alloy'
+      - './logs:/app/logs'
+    command: ['run', '--server.http.listen-addr=0.0.0.0:12345', '--stability.level=public-preview', '/etc/alloy/config.alloy']
+    restart: unless-stopped
+    environment:
+      - LOKI_HOST=198.18.0.1:3100
+    labels:
+      org.label-schema.group: 'tracing-otel-extra'
+      source: 'docker'
+      tag: 'tracing-otel-extra'
+
+  # axum-otel-demo is a demo application that uses the tracing-otel-extra crate
+  axum-otel-demo:
+    image: ghcr.io/iamnivekx/tracing-otel-extra:main-78cf8fd
+    container_name: axum-otel-demo
+    ports:
+      - 8080:8080
+    volumes:
+      - './demo.env:/app/.env'
+      - './logs/demo:/app/logs'
+    command: axum-otel-demo
+    environment:
+      - RUST_LOG=info
+    labels:
+      org.label-schema.group: 'tracing-otel-extra'
+      source: 'docker'
+      tag: 'tracing-otel-extra'
+
+  articles-service:
+    image: ghcr.io/iamnivekx/tracing-otel-extra:main-78cf8fd
+    container_name: articles-service
+    command: articles-service
+    ports:
+      - 8082:8082
+    volumes:
+      - './articles.env:/app/.env'
+      - './logs/articles:/app/logs'
+    environment:
+      - RUST_LOG=info
+      - USERS_SERVICE_URL=http://users-service:8081
+
+  users-service:
+    image: ghcr.io/iamnivekx/tracing-otel-extra:main-78cf8fd
+    container_name: users-service
+    ports:
+      - 8081:8081
+    command: users-service
+    volumes:
+      - './users.env:/app/.env'
+      - './logs/users:/app/logs'
+    environment:
+      - RUST_LOG=info
+    labels:
+      org.label-schema.group: 'tracing-otel-extra'
+      source: 'docker'
+      tag: 'tracing-otel-extra'

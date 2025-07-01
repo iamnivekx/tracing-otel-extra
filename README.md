@@ -151,27 +151,32 @@ curl http://localhost:8080/hello
 ```
 
 ### [Microservices Example](./examples/microservices/README.md)
-Complete microservices observability with distributed tracing.
+Complete microservices observability with distributed tracing using Docker Compose.
 
 **Services:**
 - **users-service** (port 8081) - User management
-- **articles-service** (port 8082) - Article management
+- **articles-service** (port 8082) - Article management  
+- **axum-otel-demo** (port 8080) - Demo application
 
-**Visualization:**
-- **Jaeger UI**: ![jaeger](./images/jaeger.png)
-- **Loki + Tempo UI**: ![loki + tempo](./images/loki-tempo.png)
+**Observability:**
+- **Log Collection**: Grafana Alloy → Loki
+- **Tracing**: OpenTelemetry → Tempo
+- **Visualization**: Grafana (Loki + Tempo)
 
 **Quick Start:**
 ```bash
-# Start services
-cargo run --package users-service
-cargo run --package articles-service
+# Start all services
+docker compose up -d
 
 # Test API
 curl -X POST http://localhost:8081/users \
   -H "Content-Type: application/json" \
   -d '{"name": "John Doe", "email": "john@example.com"}'
 ```
+
+**Visualization:**
+- **Grafana UI**: ![loki + tempo](./images/loki-tempo.png)
+- **Jaeger UI**: ![jaeger](./images/jaeger.png) (alternative)
 
 ## 🔧 Configuration
 
