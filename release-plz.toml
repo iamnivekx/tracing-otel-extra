@@ -1,0 +1,40 @@
+[workspace]
+features_always_increment_minor = true
+
+[changelog]
+header = "# Changelog"
+body = """
+## [{{ version }}]{%- if release_link -%}({{ release_link }}){% endif %} - {{ timestamp | date(format="%Y-%m-%d") }}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+{% for commit in commits %}
+{%- if commit.scope -%}
+- *({{commit.scope}})* {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}{%- if commit.links %} ({% for link in commit.links %}[{{link.text}}]({{link.href}}) {% endfor -%}){% endif %}
+{% else -%}
+- {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}
+{% endif -%}
+{% endfor -%}
+{% endfor %}
+"""
+protect_breaking_commits = true
+sort_commits = "newest"
+trim = true
+
+commit_preprocessors = [
+	# remove issue numbers from commits
+	# { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "" },
+
+	# Replace multiple spaces with a single space.
+	{ pattern = "  +", replace = " " },
+]
+
+commit_parsers = [
+	{ message = "^.*: add", group = "Added" },
+	{ message = "^.*: support", group = "Added" },
+	{ message = "^.*: remove", group = "Removed" },
+	{ message = "^.*: delete", group = "Removed" },
+	{ message = "^test", group = "Fixed" },
+	{ message = "^fix", group = "Fixed" },
+	{ message = "^.*: fix", group = "Fixed" },
+	{ message = "^.*", group = "Changed" },
+]
