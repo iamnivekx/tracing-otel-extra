@@ -11,7 +11,7 @@ resolver = "2"
 
 [workspace.package]
 rust-version = "1.86"
-version = "0.30.9-alpha.1"
+version = "0.30.9-alpha.2"
 authors = ["nivek <h49987180@gmail.com>"]
 edition = "2021"
 license = "MIT/Apache-2.0"
@@ -32,12 +32,12 @@ keywords = [
 categories = ["asynchronous", "observability"]
 
 [workspace.dependencies]
-axum-otel = { path = "crates/axum-otel", version = "0.30.9-alpha.1" }
-tracing-opentelemetry-extra = { path = "crates/tracing-opentelemetry", version = "0.30.9-alpha.1" }
+axum-otel = { path = "crates/axum-otel", version = "0.30.9-alpha.2" }
+tracing-opentelemetry-extra = { path = "crates/tracing-opentelemetry", version = "0.30.9-alpha.2" }
 tracing-otel-extra = { path = "crates/tracing-otel", features = [
     "fields",
     "context",
-], version = "0.30.9-alpha.1" }
+], version = "0.30.9-alpha.2" }
 
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
