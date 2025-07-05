@@ -30,6 +30,3 @@ lcov.info
 *.bk
 *.zip
 *_backup
-
-# logs
-logs/

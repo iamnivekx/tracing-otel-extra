@@ -29,7 +29,7 @@ keywords = [
     "loki",
     "tempo",
 ]
-categories = ["asynchronous", "observability"]
+categories = ["asynchronous"]
 
 [workspace.dependencies]
 axum-otel = { path = "crates/axum-otel", version = "0.30.9-alpha.2" }
