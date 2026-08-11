@@ -16,7 +16,7 @@ with `tracing-otel`'s `logger` or `env` feature. Provider-only users can depend
 directly on `otel-init`.
 
 The workspace packages are currently version `0.33.1`. `Cargo.toml` declares
-Rust 1.92.0 as the minimum supported Rust version. The repository toolchain may
+Rust 1.96.0 as the minimum supported Rust version. The repository toolchain may
 pin a newer compiler for local development.
 
 ## Where to start

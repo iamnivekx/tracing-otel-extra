@@ -55,7 +55,7 @@ Workspace `[workspace.dependencies]` entries must not enable crate features impl
 ### Rust Edition & Toolchain
 
 - **Edition**: Rust 2024 (`edition = "2024"`)
-- **Minimum Rust Version**: 1.92.0
+- **Minimum Rust Version**: 1.96.0
 - **Resolver**: Cargo resolver v2
 
 ### Code Style
