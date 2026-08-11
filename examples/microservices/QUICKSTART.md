@@ -25,10 +25,10 @@ docker compose ps
 
 ## Step 2: Start the Microservices
 
-In a new terminal, navigate back to the tracing-otel-extra project:
+In a new terminal, navigate back to the otel-kit project:
 
 ```bash
-cd /path/to/tracing-otel-extra
+cd otel-kit
 
 # Create logs directory
 mkdir -p logs/{articles,users,demo}

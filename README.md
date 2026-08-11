@@ -1,110 +1,176 @@
-# tracing-otel
+# otel-kit
+
+### Axum request tracing and opinionated OpenTelemetry bootstrap for Rust.
 
 [![Crates.io](https://img.shields.io/crates/v/tracing-otel.svg)](https://crates.io/crates/tracing-otel)
 [![Documentation](https://docs.rs/tracing-otel/badge.svg)](https://docs.rs/tracing-otel)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
 
-A comprehensive collection of tracing and logging utilities for Rust applications, with special focus on Axum web framework integration and OpenTelemetry observability.
+[Repository guide](docs/README.md) ·
+[`axum-otel`](https://docs.rs/axum-otel) ·
+[`tracing-otel`](https://docs.rs/tracing-otel) ·
+[`otel-init`](https://docs.rs/otel-init) ·
+[Examples](examples/)
 
-## 🚀 Features
+`otel-kit` is a workspace of three crates with separate
+observability responsibilities:
 
-- **Easy OpenTelemetry Integration** - Simple configuration and initialization for tracing and metrics
-- **Axum Web Framework Support** - Structured logging middleware with request tracing
-- **Multiple Output Formats** - Support for Compact, Pretty, and JSON log formats
-- **Distributed Tracing** - Full support for OpenTelemetry distributed tracing
-- **Metrics Collection** - Built-in metrics collection and export capabilities
-- **Automatic Resource Management** - RAII pattern for automatic cleanup
-- **Environment Configuration** - Support for standard OpenTelemetry environment variables
-- **Microservices Ready** - Complete observability solution for microservices architectures
+- `axum-otel` provides `tower-http::TraceLayer` callbacks for inbound Axum
+  request spans;
+- `tracing-otel` provides shared HTTP tracing utilities and an optional,
+  opinionated logging/bootstrap facade;
+- `otel-init` initializes OpenTelemetry providers and tracing subscribers and
+  owns their shutdown lifecycle.
 
-## 🔍 Comparison with `axum-tracing-opentelemetry`
-
-Both **axum-otel** and **axum-tracing-opentelemetry** are excellent projects in the Axum + OpenTelemetry ecosystem, and they share the same core goal: **making HTTP tracing easier and more reliable for Axum applications**.
-
-The main difference lies not in quality, but in **scope and philosophy**.
-
-### axum-tracing-opentelemetry
-
-**axum-tracing-opentelemetry** is a well-designed, focused middleware that:
-
-* Provides **clean and lightweight HTTP tracing**
-* Emphasizes **simplicity and minimal overhead**
-* Integrates naturally with existing `tracing` and `tracing-subscriber` setups
-* Is easy to adopt when you only need **request-level spans and context propagation**
-
-For many applications, especially smaller services or teams that already have their own observability stack, **axum-tracing-opentelemetry is a great and perfectly sufficient choice**.
-
-### axum-otel (this crate)
-
-**axum-otel** builds on similar foundations, but targets a slightly different use case:
-
-* It aims to provide a **more opinionated, production-oriented observability setup**
-* In addition to tracing, it includes **built-in HTTP metrics instrumentation**
-* It offers **structured logging**, file logging with rotation, and unified configuration
-* It manages OpenTelemetry providers and exporters with **RAII-based lifecycle handling**
-
-The goal of axum-otel is to **reduce boilerplate and decision-making** when setting up observability for production or microservice-oriented systems.
-
-### Key Features of axum-otel
-
-**axum-otel** provides a comprehensive observability solution with the following key features:
-
-* **Tower Integration** - Built on top of `tower-http::TraceLayer`, seamlessly integrates with Axum's middleware system and follows Tower's service-oriented architecture
-* **JSON Logging Support** - Full support for structured JSON logging format, making it easy to integrate with log aggregation systems like Loki, Elasticsearch, or cloud logging services
-* **Multiple Log Formats** - Supports Compact, Pretty, and JSON log formats, allowing you to choose the best format for your environment (development vs production)
-* **Structured Logging** - Rich structured logging with customizable fields, making logs searchable and analyzable
-* **File Logging & Rotation** - Built-in file appender with automatic log rotation, perfect for production deployments
-* **Builder Pattern API** - Intuitive builder pattern for configuration, reducing boilerplate code
-* **HTTP Semantic Attributes** - Request spans capture method, route, URL parts, protocol, `server.address`, `client.address` (with `ConnectInfo`), `user_agent.original`, `request_id`, and `trace_id`, aligned with [OpenTelemetry HTTP traces](https://opentelemetry.io/docs/specs/semconv/http/http-spans/)
-* **Metrics Collection** - Built-in HTTP metrics instrumentation with OTLP export support
-* **Environment Configuration** - Support for standard OpenTelemetry environment variables for flexible deployment configuration
-
-### Choosing Between Them
-
-* Choose **axum-tracing-opentelemetry** if:
-
-  * You want a **minimal, tracing-only solution**
-  * You prefer to assemble observability components yourself
-  * Low overhead and simplicity are your top priorities
-
-* Choose **axum-otel** if:
-
-  * You want **tracing, metrics, and logging to work together out of the box**
-  * You are building **production or microservice-based systems**
-  * You prefer a **single, cohesive observability setup** with fewer moving parts
-
-Both crates are actively maintained and follow best practices in the Rust and OpenTelemetry ecosystems.
-Which one to use ultimately depends on **your application’s complexity and observability needs**.
+Choose the smallest crate that owns the behavior your application needs. Use
+`axum-otel` with an existing subscriber for focused request tracing, or combine
+it with `tracing-otel` when you want tracing, metrics, structured logs, and
+provider lifecycle management configured together.
 
 ## 📦 Crates
 
-This workspace contains several specialized crates:
+| Crate | Responsibility | Use it when |
+| --- | --- | --- |
+| [`axum-otel`](crates/axum-otel/README.md) | Axum-specific request span creation, response events, and failure status | You need inbound Axum request tracing |
+| [`tracing-otel`](crates/tracing-otel/README.md) | HTTP tracing helpers, dynamic tracing macros, console/file logging, and application bootstrap | You need shared tracing behavior or the `Logger` facade |
+| [`otel-init`](crates/otel-init/README.md) | OTLP tracer, meter, and logger providers; subscriber setup; provider shutdown | You own subscriber setup or need provider-level initialization |
 
-### [axum-otel](./crates/axum-otel/README.md)
-OpenTelemetry tracing middleware for Axum web framework
-- Structured logging middleware
-- Request/response tracing
-- Customizable span attributes
-- Metrics collection
+The feature-dependent dependency direction is:
 
-### [tracing-otel](./crates/tracing-otel/README.md)
-OpenTelemetry tracing support for tracing-subscriber
-- Easy-to-use configuration through Builder pattern
-- Multiple log output formats (Compact, Pretty, JSON)
-- Automatic resource cleanup with RAII pattern
-- Built-in metrics support
-- Environment detection and configuration
+```text
+axum-otel -> tracing-otel -> otel-init
+```
 
-### [otel-init](./crates/otel-init/README.md)
-Enhanced OpenTelemetry integration utilities
-- Clean, easy-to-use API for OpenTelemetry setup
-- Configurable sampling and resource attributes
-- Automatic cleanup with guard pattern
-- Support for both tracing and metrics
+`tracing-otel` has no default features. Applications must explicitly enable
+the capabilities they use; see the [Cargo feature guide](docs/features.md).
 
-## Migrating from 0.33.0
+## 🚀 Quick start
 
-`tracing-otel` and `otel-init` are new crates.io packages that succeed `tracing-otel-extra` and `tracing-opentelemetry-extra`. Cargo does not migrate package names automatically.
+This example combines the Axum callbacks with the opinionated `Logger` facade:
+
+```toml
+[dependencies]
+anyhow = "1"
+axum = "0.8"
+axum-otel = "0.33.1"
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread"] }
+tower-http = { version = "0.6", features = ["trace"] }
+tracing-otel = { version = "0.33.1", features = ["logger"] }
+```
+
+```rust
+use axum::{Router, routing::get};
+use axum_otel::{
+    AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator, Level,
+};
+use tower_http::trace::TraceLayer;
+use tracing_otel::{LogFormat, Logger};
+
+async fn health() -> &'static str {
+    "OK"
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let _guard = Logger::new("web-api")
+        .with_format(LogFormat::Json)
+        .with_ansi(false)
+        .init()?;
+
+    let app = Router::new().route("/health", get(health)).layer(
+        TraceLayer::new_for_http()
+            .make_span_with(AxumOtelSpanCreator::new().level(Level::INFO))
+            .on_response(AxumOtelOnResponse::new().level(Level::INFO))
+            .on_failure(AxumOtelOnFailure::new().level(Level::ERROR)),
+    );
+
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+```
+
+Keep the returned `LoggerGuard` alive for the application lifetime. It owns the
+OpenTelemetry providers and any non-blocking file writer guard, and shuts them
+down in the required order.
+
+OTLP export is opt-in. Without a configured endpoint, providers remain local
+and no connection to `localhost:4317` is attempted:
+
+```sh
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+```
+
+See [Getting started](docs/getting-started.md),
+[Logger configuration](docs/logger.md), and
+[OTLP export and lifecycle](docs/otlp.md) for the complete setup.
+
+## 🔍 Comparison with `axum-tracing-opentelemetry`
+
+Both `axum-otel` and `axum-tracing-opentelemetry` help Axum applications create
+OpenTelemetry-aware HTTP request spans. The difference is mainly the intended
+scope.
+
+### `axum-tracing-opentelemetry`
+
+`axum-tracing-opentelemetry` is a focused choice when you:
+
+- want request tracing and context propagation with a small middleware surface;
+- already own the `tracing` subscriber, exporters, metrics, and logging setup;
+- prefer to assemble the observability stack from independent components.
+
+For applications with an established observability bootstrap, that narrower
+scope can be exactly what is needed.
+
+### `axum-otel` and this workspace
+
+`axum-otel` itself stays focused on three `TraceLayer` callbacks:
+
+- `AxumOtelSpanCreator` creates and enriches request spans;
+- `AxumOtelOnResponse` records response status and emits completion events;
+- `AxumOtelOnFailure` marks classified server failures as OpenTelemetry errors.
+
+The broader, opinionated setup comes from composing it with the other workspace
+crates. `tracing-otel` adds structured console/file logging and application
+bootstrap, while `otel-init` adds trace, metric, and optional log providers plus
+RAII lifecycle management.
+
+Choose `axum-tracing-opentelemetry` when you primarily need focused middleware
+and already own the rest of the stack. Choose this workspace when you want the
+same HTTP tracing boundary plus reusable HTTP span helpers or a cohesive
+tracing, metrics, logging, and shutdown setup.
+
+## 🔭 HTTP request spans
+
+`axum-otel` builds on `tower-http::TraceLayer` and records OpenTelemetry-aligned
+HTTP attributes including method, route, URL parts, protocol, `server.address`,
+`client.address` when `ConnectInfo<SocketAddr>` is available,
+`user_agent.original`, `request_id`, and `trace_id`.
+
+The shared span schema lives in `tracing-otel`; the Axum adapter owns matched
+route, transport peer, span name, and server span kind. See
+[HTTP span attributes](docs/http-spans.md) before writing dashboards, alerts,
+or sampling rules.
+
+## 📚 Examples
+
+- [`examples/otel`](examples/otel/README.md) demonstrates one Axum service with
+  request IDs and environment-based logger configuration.
+- [`examples/microservices`](examples/microservices/README.md) demonstrates
+  cross-service propagation with Grafana, Loki, and Tempo-oriented local
+  infrastructure.
+
+Run the basic service with:
+
+```sh
+cargo run -p axum-otel-demo
+```
+
+## 🔄 Migrating from 0.33.0
+
+Version `0.33.1` introduced new crates.io package names. Cargo does not migrate
+package names automatically:
 
 ```toml
 # Before
@@ -116,324 +182,23 @@ tracing-otel = "0.33.1"
 otel-init = "0.33.1"
 ```
 
-Update Rust imports from `tracing_otel_extra` to `tracing_otel` and from `tracing_opentelemetry_extra` to `otel_init`. The old `0.33.0` packages remain available until they are yanked after the successors are published.
-
-## 🛠️ Installation
-
-Add the desired crate to your `Cargo.toml`:
-
-```toml
-# For Axum web framework integration
-[dependencies]
-axum-otel = "0.33"
-axum = { version = "0.8", features = ["macros"] }
-tower-http = { version = "0.6.6", features = ["trace"] }
-
-# For general OpenTelemetry tracing
-tracing-otel = "0.33"
-tracing = "0.1"
-tokio = { version = "1.0", features = ["full"] }
-```
-
-## 🚀 Quick Start
-
-### Basic Axum Integration
-
-```rust
-use axum::{routing::get, Router};
-use axum_otel::{AxumOtelSpanCreator, AxumOtelOnResponse, AxumOtelOnFailure};
-use tokio::net::TcpListener;
-use tower_http::trace::TraceLayer;
-use tracing::Level;
-
-async fn handler() -> &'static str {
-    "Hello, World!"
-}
-
-#[tokio::main]
-async fn main() {
-    // Initialize tracing
-    let _guard = tracing_otel::Logger::new("my-service")
-        .with_format(tracing_otel::LogFormat::Json)
-        .init()
-        .expect("Failed to initialize tracing");
-
-    // Build Axum application with tracing
-    let app = Router::new()
-        .route("/", get(handler))
-        .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(AxumOtelSpanCreator::new().level(Level::INFO))
-                .on_response(AxumOtelOnResponse::new().level(Level::INFO))
-                .on_failure(AxumOtelOnFailure::new()),
-        );
-
-    // Start server
-    let listener = TcpListener::bind("127.0.0.1:3000").await.expect("Failed to bind to port 3000");
-    tracing::info!("Server listening on {}", listener.local_addr().expect("Failed to get local address"));
-    axum::serve(listener, app.into_make_service()).await.expect("Failed to serve application");
-}
-```
-
-### Advanced Configuration
-
-```rust
-use tracing_otel::{Logger, LogFormat};
-use opentelemetry::KeyValue;
-use tracing::Level;
-
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    let _guard = Logger::new("production-service")
-        .with_format(LogFormat::Json)
-        .with_level(Level::DEBUG)
-        .with_sample_ratio(0.1)  // 10% sampling
-        .with_metrics_interval(60)
-        .with_attributes(vec![
-            KeyValue::new("environment", "production"),
-            KeyValue::new("version", "1.2.3"),
-        ])
-        .init()?;
-
-    tracing::info!(
-        user_id = 12345,
-        action = "login",
-        "User logged in successfully"
-    );
-
-    Ok(())
-}
-```
-
-## 📚 Examples
-
-### [OpenTelemetry Integration](./examples/otel/README.md)
-Basic OpenTelemetry tracing setup with Jaeger visualization.
-
-**Prerequisites:**
-```bash
-# Start Jaeger
-docker run -d -p6831:6831/udp -p6832:6832/udp -p16686:16686 -p4317:4317 \
-  jaegertracing/all-in-one:latest
-```
-
-**Run:**
-```bash
-cargo run --example otel
-curl http://localhost:8080/hello
-```
-
-### [Microservices Example](./examples/microservices/README.md)
-Complete microservices observability with distributed tracing using Docker Compose.
-
-**Services:**
-- **users-service** (port 8081) - User management
-- **articles-service** (port 8082) - Article management  
-- **axum-otel-demo** (port 8080) - Demo application
-
-**Observability:**
-- **Log Collection**: Grafana Alloy → Loki
-- **Tracing**: OpenTelemetry → Tempo
-- **Visualization**: Grafana (Loki + Tempo)
-
-**Quick Start:**
-```bash
-# Start all services
-docker compose up -d
-
-# Test API
-curl -X POST http://localhost:8081/users \
-  -H "Content-Type: application/json" \
-  -d '{"name": "John Doe", "email": "john@example.com"}'
-```
-
-**Visualization:**
-- **Grafana UI**: ![loki + tempo](./images/loki-tempo.png)
-- **Jaeger UI**: ![jaeger](./images/jaeger.png) (alternative)
-
-## 🔧 Configuration
-
-### Environment Variables
-
-```bash
-# OTLP export configuration
-# If no OTLP endpoint is configured, or it is configured as an empty string,
-# providers are initialized locally so spans can still produce trace IDs, but
-# nothing is exported and no connection to localhost:4317 is attempted.
-#
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
-export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
-
-# Log level (overrides code configuration)
-export RUST_LOG=debug
-
-# Resource attributes
-export OTEL_RESOURCE_ATTRIBUTES='service.name=my-service,service.version=1.0.0'
-```
-
-### OpenTelemetry
-
-All observability backends use the standard OTLP (OpenTelemetry Protocol) for data export. You can choose from the following options:
-
-#### 1: dockotlp (Self-Hosted Grafana Stack)
-
-[dockotlp](https://github.com/nivek-ph/dockotlp) provides a complete self-hosted observability stack with Grafana, Prometheus, Loki, Tempo, OpenTelemetry Collector, and more.
-
-Perfect for self-hosted deployments where you want full control over your observability infrastructure.
-
-**Quick Start:**
-
-Follow the [dockotlp Quick Start guide](https://github.com/nivek-ph/dockotlp?tab=readme-ov-file#quick-start) to set up the stack.
-
-**Configure your application:**
-
-```bash
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
-export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
-```
-
-#### 2: Grafana Cloud
-
-**Setup:**
-
-```bash
-# Grafana Cloud OTLP endpoint (replace with your region and instance URL)
-export OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-prod-<region>.grafana.net/otlp
-
-# Use HTTP/Protobuf protocol for Grafana Cloud
-export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-
-# Authentication header (Basic auth with instance ID and API token)
-# Format: Authorization=Basic <base64(instanceId:apiToken)>
-export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <your-base64-credentials>"
-```
-
-**Getting Grafana Cloud Credentials:**
-
-1. Log in to your Grafana Cloud account
-2. Navigate to **Connections** → **OpenTelemetry**
-3. Copy the **OTLP Endpoint URL** and **Basic Auth** credentials
-4. Set the environment variables as shown above
-
-**Example `.env` file for Grafana Cloud:**
-
-```bash
-OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
-OTEL_EXPORTER_OTLP_ENDPOINT="https://otlp-gateway-prod-ap-southeast-1.grafana.net/otlp"
-OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <your-base64-credentials>"
-OTEL_RESOURCE_ATTRIBUTES="service.name=my-service,service.version=1.0.0"
-RUST_LOG=info
-```
-
-**Note:** Replace `<your-base64-credentials>` with your actual Base64-encoded credentials from Grafana Cloud. The format is `Base64(instanceId:apiToken)`.
-
-#### Option 3: Jaeger
-
-[Jaeger](https://www.jaegertracing.io/) is a popular open-source distributed tracing system, originally developed by Uber. It provides:
-- **Distributed Tracing** - End-to-end request tracing
-- **Jaeger UI** - Web-based trace visualization
-- **Multiple Storage Backends** - Supports various storage options (Elasticsearch, Cassandra, etc.)
-
-Great for teams already using Jaeger or preferring its specific features.
-
-**Setup:**
-
-```bash
-# Start Jaeger All-in-One (includes collector, query, and UI)
-docker run -d \
-  -p 6831:6831/udp \
-  -p 6832:6832/udp \
-  -p 16686:16686 \
-  -p 4317:4317 \
-  jaegertracing/all-in-one:latest
-
-# Configure your application
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
-export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
-```
-
-**Access Jaeger UI:** http://localhost:16686
-
-### Sampling Configuration
-
-```rust
-// Sample 50% of traces
-let _guard = Logger::new("service")
-    .with_sample_ratio(0.5)
-    .init()?;
-```
-
-## 🏗️ Architecture
-
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Axum App      │    │   tracing-otel   │    │  OpenTelemetry  │
-│                 │    │                  │    │                 │
-│ ┌─────────────┐ │    │ ┌──────────────┐ │    │ ┌─────────────┐ │
-│ │axum-otel    │ │◄──►│ │Logger        │ │◄──►│ │Jaeger       │ │
-│ │middleware   │ │    │ │Configuration │ │    │ │OTEL Collector│ │
-│ └─────────────┘ │    │ └──────────────┘ │    │ └─────────────┘ │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-```
-
-## 📖 API Reference
-
-### axum-otel
-
-- `AxumOtelSpanCreator` - Creates spans for HTTP requests
-- `AxumOtelOnResponse` - Handles response logging
-- `AxumOtelOnFailure` - Handles error logging
-
-### tracing-otel
-
-- `Logger` - Main configuration builder
-- `LogFormat` - Log output format options
-- `LoggerGuard` - RAII ownership for telemetry providers and non-blocking writer shutdown
-
-### otel-init
-
-- `init_tracer_provider` - Initialize OpenTelemetry tracer
-- `init_meter_provider` - Initialize OpenTelemetry meter
-- `OtelGuard` - Automatic resource cleanup
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our contributing guidelines:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/nivek-ph/tracing-otel-extra.git
-cd tracing-otel-extra
-
-# Run tests
-cargo test
-
-# Run examples
-cargo run --example otel
-```
+Update Rust imports from `tracing_otel_extra` to `tracing_otel` and from
+`tracing_opentelemetry_extra` to `otel_init`. Also select explicit
+`tracing-otel` features: `logger` for code configuration, `env` for
+`Logger::from_env`, or the narrower HTTP features listed in the
+[feature guide](docs/features.md).
+
+See the complete [migration guide](docs/migration.md) for downstream dashboard
+and HTTP attribute changes.
+
+## 🧩 Compatibility
+
+- Rust 1.92.0 is the workspace compatibility baseline.
+- The repository toolchain may use a newer compiler for local development.
+- OpenTelemetry export supports gRPC, HTTP/Protobuf, and HTTP/JSON according to
+  the configured endpoint and protocol environment variables.
 
 ## 📄 License
 
-This project is licensed under either of
-
- * Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
-
-## 🔗 Links
-
-- [Documentation](https://docs.rs/tracing-otel/)
-- [Crates.io](https://crates.io/crates/tracing-otel)
-- [GitHub Repository](https://github.com/nivek-ph/tracing-otel-extra)
-- [OpenTelemetry](https://opentelemetry.io/)
-- [Axum Framework](https://github.com/tokio-rs/axum)
-- [dockotlp](https://github.com/nivek-ph/dockotlp)
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE));
+- MIT License ([LICENSE-MIT](LICENSE-MIT)).
