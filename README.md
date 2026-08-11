@@ -193,7 +193,7 @@ and HTTP attribute changes.
 
 ## 🧩 Compatibility
 
-- Rust 1.92.0 is the workspace compatibility baseline.
+- Rust 1.96.0 is the workspace compatibility baseline.
 - The repository toolchain may use a newer compiler for local development.
 - OpenTelemetry export supports gRPC, HTTP/Protobuf, and HTTP/JSON according to
   the configured endpoint and protocol environment variables.
