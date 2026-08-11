@@ -20,14 +20,14 @@ All notable changes to this project will be documented in this file.
 
 The entries below were published under the `tracing-opentelemetry-extra` package name.
 
-## [0.33.0](https://github.com/nivek-ph/tracing-otel-extra/compare/tracing-opentelemetry-extra-v0.32.1...tracing-opentelemetry-extra-v0.33.0)
+## [0.33.0](https://github.com/nivek-ph/otel-kit/compare/tracing-opentelemetry-extra-v0.32.1...tracing-opentelemetry-extra-v0.33.0)
 
 ### ⚠️ Breaking Changes
 
 - Upgrade OpenTelemetry dependencies to `0.32` and `tracing-opentelemetry` to `0.33`. Downstream crates must use matching OpenTelemetry versions.
 - Remove `Clone` from `OtelGuard` so dropping a duplicate cannot shut down shared OpenTelemetry providers early.
 
-## [0.31.8](https://github.com/nivek-ph/tracing-otel-extra/compare/tracing-opentelemetry-extra-v0.31.7...tracing-opentelemetry-extra-v0.31.8)
+## [0.31.8](https://github.com/nivek-ph/otel-kit/compare/tracing-opentelemetry-extra-v0.31.7...tracing-opentelemetry-extra-v0.31.8)
 
 
 
@@ -35,26 +35,26 @@ The entries below were published under the `tracing-opentelemetry-extra` package
 ### Fixed
 
 
-- *(opentelemetry)* Skip OTLP exporters when no endpoint is configured ([#21](https://github.com/nivek-ph/tracing-otel-extra/pull/21)) - ([4e614fe](https://github.com/nivek-ph/tracing-otel-extra/commit/4e614fe45568da3682ce2e4db4eb32a7317b3dd8))
+- *(opentelemetry)* Skip OTLP exporters when no endpoint is configured ([#21](https://github.com/nivek-ph/otel-kit/pull/21)) - ([4e614fe](https://github.com/nivek-ph/otel-kit/commit/4e614fe45568da3682ce2e4db4eb32a7317b3dd8))
 
 ### 🐛 Bug Fixes
 
 - Initialize local OpenTelemetry providers without OTLP exporters when no endpoint is configured or endpoint env vars are empty, avoiding default localhost:4317 connection attempts.
 
-## [0.31.5](https://github.com/nivek-ph/tracing-otel-extra/compare/tracing-opentelemetry-extra-v0.31.4...tracing-opentelemetry-extra-v0.31.5)
+## [0.31.5](https://github.com/nivek-ph/otel-kit/compare/tracing-opentelemetry-extra-v0.31.4...tracing-opentelemetry-extra-v0.31.5)
 
 
 
 
 ### 🚜 Refactor
 
-- Reorganize imports and simplify shutdown logic in tracing modules - ([0f95108](https://github.com/nivek-ph/tracing-otel-extra/commit/0f951082ae571380fef1c626855271d1ab74794a))
+- Reorganize imports and simplify shutdown logic in tracing modules - ([0f95108](https://github.com/nivek-ph/otel-kit/commit/0f951082ae571380fef1c626855271d1ab74794a))
 
 
 ### ⚙️ Miscellaneous Tasks
 
-- Update workspace dependencies and enhance CI configuration - ([244742d](https://github.com/nivek-ph/tracing-otel-extra/commit/244742d220816d3750abfd67175be04bacd057da))
+- Update workspace dependencies and enhance CI configuration - ([244742d](https://github.com/nivek-ph/otel-kit/commit/244742d220816d3750abfd67175be04bacd057da))
 
-- Update dependencies and refactor configuration handling - ([576ba88](https://github.com/nivek-ph/tracing-otel-extra/commit/576ba887424fc684aaea33a92cfc60debe36a521))
+- Update dependencies and refactor configuration handling - ([576ba88](https://github.com/nivek-ph/otel-kit/commit/576ba887424fc684aaea33a92cfc60debe36a521))
 
-- Update dependencies and improve CI workflow - ([7b4410b](https://github.com/nivek-ph/tracing-otel-extra/commit/7b4410b5b8fc295e2b14c3f752b0a99d3753bb44))
+- Update dependencies and improve CI workflow - ([7b4410b](https://github.com/nivek-ph/otel-kit/commit/7b4410b5b8fc295e2b14c3f752b0a99d3753bb44))

@@ -1,0 +1,19 @@
+[book]
+title = "otel-kit"
+description = "Tracing, logging, and OpenTelemetry integration for Rust and Axum"
+authors = ["nivek"]
+language = "en"
+src = "docs"
+
+[output.html]
+site-url = "/otel-kit/"
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/nivek-ph/otel-kit"
+git-repository-icon = "fab-github"
+edit-url-template = "https://github.com/nivek-ph/otel-kit/edit/main/{path}"
+no-section-label = true
+
+[output.html.search]
+enable = true
+limit-results = 20
